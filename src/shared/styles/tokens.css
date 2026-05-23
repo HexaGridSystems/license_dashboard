@@ -1,0 +1,47 @@
+:root {
+  --text-main: #102a43;
+  --text-soft: #334e68;
+  --text-muted: #5f7285;
+  --text-heading: #0b1f33;
+  --page-top: #f1f8ff;
+  --page-bottom: #fef8ea;
+  --page-accent-a: rgba(27, 120, 166, 0.2);
+  --page-accent-b: rgba(241, 180, 75, 0.2);
+  --card-bg: rgba(255, 255, 255, 0.88);
+  --card-border: rgba(147, 168, 188, 0.26);
+  --card-border-strong: rgba(84, 111, 138, 0.4);
+  --shadow-soft: 0 18px 34px rgba(11, 45, 65, 0.08);
+  --surface: #ffffff;
+  --surface-soft: #f8fcff;
+  --surface-tint: #f4f9fd;
+  --button-secondary-bg: #eaf6ff;
+  --button-secondary-text: #0e5f8b;
+  --status-success-bg: #e9f9f1;
+  --status-success-border: #b7e3d0;
+  --status-success-text: #1d7a58;
+  --heading: 'Sora', 'Trebuchet MS', sans-serif;
+  --body: 'IBM Plex Sans', 'Trebuchet MS', sans-serif;
+}
+
+:root[data-theme='dark'] {
+  --text-main: #e3edf8;
+  --text-soft: #bfd3ea;
+  --text-muted: #93acc8;
+  --text-heading: #f2f7fd;
+  --page-top: #0f1825;
+  --page-bottom: #181f2e;
+  --page-accent-a: rgba(67, 126, 168, 0.22);
+  --page-accent-b: rgba(184, 137, 58, 0.2);
+  --card-bg: rgba(20, 30, 43, 0.82);
+  --card-border: rgba(111, 146, 180, 0.3);
+  --card-border-strong: rgba(137, 170, 201, 0.5);
+  --shadow-soft: 0 20px 38px rgba(0, 0, 0, 0.36);
+  --surface: #172231;
+  --surface-soft: #1c2a3a;
+  --surface-tint: #243447;
+  --button-secondary-bg: #203950;
+  --button-secondary-text: #c9e7ff;
+  --status-success-bg: rgba(31, 88, 65, 0.34);
+  --status-success-border: rgba(93, 168, 131, 0.5);
+  --status-success-text: #b9f1d4;
+}

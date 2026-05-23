@@ -1,0 +1,4 @@
+export const DASHBOARD_STORAGE_KEY = 'legal-licence-dashboard-v2'
+export const LEGACY_RECORD_STORAGE_KEY = 'legal-licence-dashboard-records'
+export const THEME_STORAGE_KEY = 'legal-licence-theme'
+export const AUTH_STORAGE_KEY = 'legal-licence-auth'
