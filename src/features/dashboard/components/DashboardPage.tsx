@@ -23,14 +23,12 @@ export function DashboardPage(props: DashboardPageProps) {
   const {
     hospitals,
     licenses,
+    isSyncing,
+    lastSyncedAt,
     selectedHospitalId,
     selectedCategory,
     banner,
-    inlineEditId,
-    inlineDraft,
-    inlineErrors,
     isLicenseModalOpen,
-    licenseModalMode,
     modalDraft,
     modalErrors,
     isWizardOpen,
@@ -49,20 +47,14 @@ export function DashboardPage(props: DashboardPageProps) {
     upcomingMilestones,
     setSelectedHospitalId,
     setSelectedCategory,
-    setInlineDraft,
     setModalDraft,
     setHospitalDraft,
     setWizardStep,
     setIsLicenseModalOpen,
     setIsWizardOpen,
     openCreateLicenseModal,
-    openEditLicenseModal,
     saveLicenseModal,
-    startInlineEdit,
-    cancelInlineEdit,
-    saveInlineEdit,
     exportFiltered,
-    openWizard,
     goWizardNext,
     addWizardLicense,
     updateWizardLicense,
@@ -77,9 +69,9 @@ export function DashboardPage(props: DashboardPageProps) {
         totalHospitals={totalHospitals}
         totalLicenses={licenses.length}
         criticalCount={criticalCount}
+        lastSyncedAt={lastSyncedAt}
         onToggleTheme={onToggleTheme}
         onLogout={onLogout}
-        onOpenWizard={openWizard}
       />
 
       {banner ? <p className={styles.statusBanner}>{banner}</p> : null}
@@ -111,26 +103,18 @@ export function DashboardPage(props: DashboardPageProps) {
 
         <LicenseRegisterTable
           licenses={enrichedFilteredLicenses}
-          inlineEditId={inlineEditId}
-          inlineDraft={inlineDraft}
-          inlineErrors={inlineErrors}
-          onInlineDraftChange={setInlineDraft}
-          onStartInlineEdit={startInlineEdit}
-          onSaveInlineEdit={saveInlineEdit}
-          onCancelInlineEdit={cancelInlineEdit}
-          onOpenEditModal={openEditLicenseModal}
         />
       </section>
 
       {isLicenseModalOpen ? (
         <LicenseModal
           hospitals={hospitals}
-          mode={licenseModalMode}
           draft={modalDraft}
           errors={modalErrors}
           onClose={() => setIsLicenseModalOpen(false)}
           onSave={saveLicenseModal}
           onDraftChange={setModalDraft}
+          isSyncing={isSyncing}
         />
       ) : null}
 
@@ -149,6 +133,7 @@ export function DashboardPage(props: DashboardPageProps) {
           onAddLicense={addWizardLicense}
           onUpdateWizardLicense={updateWizardLicense}
           onRemoveWizardLicense={removeWizardLicense}
+          isSyncing={isSyncing}
         />
       ) : null}
     </div>

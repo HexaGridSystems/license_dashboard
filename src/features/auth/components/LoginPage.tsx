@@ -23,6 +23,7 @@ export function LoginPage(props: LoginPageProps) {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const nextModeLabel = themeMode === 'light' ? 'Switch to dark mode' : 'Switch to light mode'
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -37,8 +38,24 @@ export function LoginPage(props: LoginPageProps) {
       <article className={styles.loginCard}>
         <div className={styles.loginHead}>
           <p className={styles.eyebrow}>Hospital Legal Operations</p>
-          <button type="button" className={styles.themeToggle} onClick={onToggleTheme}>
-            {themeMode === 'light' ? 'Dark Mode' : 'Light Mode'}
+          <button
+            type="button"
+            className={styles.themeToggle}
+            onClick={onToggleTheme}
+            aria-label={nextModeLabel}
+            title={nextModeLabel}
+          >
+            <span className={styles.srOnly}>{nextModeLabel}</span>
+            {themeMode === 'light' ? (
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M14.7 3.7a8.5 8.5 0 1 0 5.6 15.1 9 9 0 1 1-5.6-15.1z" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <circle cx="12" cy="12" r="4.3" />
+                <path d="M12 2.2v2.3M12 19.5v2.3M4.2 12h2.3M17.5 12h2.3M5.8 5.8l1.6 1.6M16.6 16.6l1.6 1.6M18.2 5.8l-1.6 1.6M7.4 16.6l-1.6 1.6" />
+              </svg>
+            )}
           </button>
         </div>
 

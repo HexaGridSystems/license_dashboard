@@ -97,3 +97,44 @@ npm run dev
 ```bash
 npm run build
 ```
+
+## Google Sheets Integration
+
+This project can sync hospitals/licenses with a deployed Google Apps Script Web App.
+
+### 1. Configure environment variable
+
+Create `.env.local` in project root:
+
+```bash
+VITE_APPS_SCRIPT_URL=https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec
+```
+
+Then restart the Vite dev server.
+
+### 2. Apps Script code
+
+Use the script in [apps-script/Code.gs](apps-script/Code.gs). It supports:
+
+- `GET ?action=list` -> `{ hospitals, licenses }`
+- `POST { action: 'upsertLicense', payload }`
+- `POST { action: 'upsertHospitalWithLicenses', payload }`
+
+### 3. Required sheet tabs and headers
+
+Create these tabs in the bound spreadsheet:
+
+1. `Hospitals`
+2. `Licences`
+
+Required headers:
+
+- Hospitals: `id,name,address,contactPerson,complianceOwner`
+- Licences: `id,hospitalId,licenceName,category,issueDate,expiryDate,owner,regulator,status`
+
+### 4. Deploy Apps Script as web app
+
+1. Deploy -> New deployment -> Web app
+2. Execute as: `Me`
+3. Who has access: `Anyone` (or your preferred scope)
+4. Copy `/exec` URL into `VITE_APPS_SCRIPT_URL`

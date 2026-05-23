@@ -4,22 +4,22 @@ import { cx } from './utils'
 
 type LicenseModalProps = {
   hospitals: Hospital[]
-  mode: 'create' | 'edit'
   draft: LicenseDraft
   errors: LicenseFieldErrors
+  isSyncing: boolean
   onClose: () => void
   onSave: () => void
   onDraftChange: (updater: (prev: LicenseDraft) => LicenseDraft) => void
 }
 
 export function LicenseModal(props: LicenseModalProps) {
-  const { hospitals, mode, draft, errors, onClose, onSave, onDraftChange } = props
+  const { hospitals, draft, errors, isSyncing, onClose, onSave, onDraftChange } = props
 
   return (
     <div className={styles.modalOverlay} role="presentation" onClick={onClose}>
       <div className={styles.modalCard} role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
         <div className={cx(styles.sectionHead, styles.compact)}>
-          <h3>{mode === 'create' ? 'Add License' : 'Edit License Details'}</h3>
+          <h3>Add License</h3>
         </div>
 
         <div className={styles.modalGrid}>
@@ -129,7 +129,9 @@ export function LicenseModal(props: LicenseModalProps) {
         </div>
 
         <div className={cx(styles.rowActions, styles.modalActions)}>
-          <button type="button" className={styles.primaryAction} onClick={onSave}>Save</button>
+          <button type="button" className={styles.primaryAction} onClick={onSave} disabled={isSyncing}>
+            {isSyncing ? 'Saving...' : 'Save'}
+          </button>
           <button type="button" className={styles.ghost} onClick={onClose}>
             Cancel
           </button>

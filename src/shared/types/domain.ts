@@ -37,11 +37,6 @@ export type WizardLicenseDraft = LicenseDraft & {
   tempId: string
 }
 
-export type InlineDraft = Pick<
-  HospitalLicense,
-  'expiryDate' | 'owner' | 'category' | 'status'
->
-
 export type LicenseFieldErrors = {
   licenceName: string
   category: string
