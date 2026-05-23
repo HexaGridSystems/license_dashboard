@@ -13,6 +13,7 @@ type WizardModalProps = {
   hospitalErrors: { name: string }
   wizardLicenses: WizardLicenseDraft[]
   wizardLicenseErrors: Record<string, LicenseFieldErrors>
+  isSyncing: boolean
   onClose: () => void
   onHospitalDraftChange: (
     updater: (prev: {
@@ -46,6 +47,7 @@ export function WizardModal(props: WizardModalProps) {
     hospitalErrors,
     wizardLicenses,
     wizardLicenseErrors,
+    isSyncing,
     onClose,
     onHospitalDraftChange,
     onSetWizardStep,
@@ -187,7 +189,7 @@ export function WizardModal(props: WizardModalProps) {
               )
             })}
 
-            <button type="button" className={styles.addLicenseRow} onClick={onAddLicense}>
+            <button type="button" className={styles.addLicenseRow} onClick={onAddLicense} disabled={isSyncing}>
               + Add another license
             </button>
           </div>
@@ -200,9 +202,13 @@ export function WizardModal(props: WizardModalProps) {
             </button>
           ) : null}
           {wizardStep === 1 ? (
-            <button type="button" className={styles.primaryAction} onClick={onNext}>Continue</button>
+            <button type="button" className={styles.primaryAction} onClick={onNext} disabled={isSyncing}>
+              Continue
+            </button>
           ) : (
-            <button type="button" className={styles.primaryAction} onClick={onSave}>Create Hospital and Licenses</button>
+            <button type="button" className={styles.primaryAction} onClick={onSave} disabled={isSyncing}>
+              {isSyncing ? 'Saving...' : 'Create Hospital and Licenses'}
+            </button>
           )}
           <button type="button" className={styles.ghost} onClick={onClose}>
             Cancel

@@ -7,9 +7,9 @@ type DashboardHeaderProps = {
   totalHospitals: number
   totalLicenses: number
   criticalCount: number
+  lastSyncedAt: number | null
   onToggleTheme: () => void
   onLogout: () => void
-  onOpenWizard: () => void
 }
 
 export function DashboardHeader(props: DashboardHeaderProps) {
@@ -18,10 +18,23 @@ export function DashboardHeader(props: DashboardHeaderProps) {
     totalHospitals,
     totalLicenses,
     criticalCount,
+    lastSyncedAt,
     onToggleTheme,
     onLogout,
-    onOpenWizard,
   } = props
+
+  const nextModeLabel = themeMode === 'light' ? 'Switch to dark mode' : 'Switch to light mode'
+  const formattedLastSync = lastSyncedAt
+    ? `${new Date(lastSyncedAt).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      })} · ${new Date(lastSyncedAt).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      })}`
+    : 'Not synced yet'
 
   return (
     <header className={cx(styles.heroPanel, styles.card)}>
@@ -40,15 +53,28 @@ export function DashboardHeader(props: DashboardHeaderProps) {
           </div>
         </div>
         <div className={styles.heroActions}>
-          <div className={styles.reportPill}>Last sync: 23 May 2026 · 09:30 AM</div>
-          <button type="button" className={styles.themeToggle} onClick={onToggleTheme}>
-            {themeMode === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+          <div className={styles.reportPill}>Last sync: {formattedLastSync}</div>
+          <button
+            type="button"
+            className={styles.themeToggle}
+            onClick={onToggleTheme}
+            aria-label={nextModeLabel}
+            title={nextModeLabel}
+          >
+            <span className={styles.srOnly}>{nextModeLabel}</span>
+            {themeMode === 'light' ? (
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M14.7 3.7a8.5 8.5 0 1 0 5.6 15.1 9 9 0 1 1-5.6-15.1z" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <circle cx="12" cy="12" r="4.3" />
+                <path d="M12 2.2v2.3M12 19.5v2.3M4.2 12h2.3M17.5 12h2.3M5.8 5.8l1.6 1.6M16.6 16.6l1.6 1.6M18.2 5.8l-1.6 1.6M7.4 16.6l-1.6 1.6" />
+              </svg>
+            )}
           </button>
           <button type="button" className={styles.ghost} onClick={onLogout}>
             Logout
-          </button>
-          <button type="button" className={styles.primaryAction} onClick={onOpenWizard}>
-            + Create Hospital Setup
           </button>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   emptyHospitalDraft,
   emptyHospitalErrors,
@@ -9,12 +9,12 @@ import {
 } from '../../licenses/data/seed'
 import {
   DASHBOARD_STORAGE_KEY,
+  LAST_SYNC_STORAGE_KEY,
   LEGACY_RECORD_STORAGE_KEY,
 } from '../../../shared/constants/storageKeys'
 import type {
   Hospital,
   HospitalLicense,
-  InlineDraft,
   LicenseDraft,
   LicenseFieldErrors,
   LicenceCategory,
@@ -25,6 +25,11 @@ import { getRenewalSignals, defaultStatusFromExpiry } from '../../licenses/utils
 import { createId } from '../../../shared/utils/id'
 import { migrateLegacyRecords } from '../../licenses/utils/migrateLegacy'
 import { exportRowsToExcel } from '../../../shared/utils/exportExcel'
+import {
+  listDashboardData,
+  upsertHospitalWithLicenses,
+  upsertLicense,
+} from '../api/googleSheetsClient'
 
 export type EnrichedLicense = HospitalLicense & {
   hospitalName: string
@@ -37,30 +42,34 @@ export type EnrichedLicense = HospitalLicense & {
   }
 }
 
+const BACKGROUND_SYNC_INTERVAL_MS = 30000
+
 export function useDashboardState() {
-  const [hospitals, setHospitals] = useState<Hospital[]>(seedHospitals)
-  const [licenses, setLicenses] = useState<HospitalLicense[]>(seedLicenses)
+  const appScriptUrl = import.meta.env.VITE_APPS_SCRIPT_URL?.trim() ?? ''
+  const hasRemoteSync = appScriptUrl.length > 0
+
+  const [hospitals, setHospitals] = useState<Hospital[]>(() =>
+    hasRemoteSync ? [] : seedHospitals,
+  )
+  const [licenses, setLicenses] = useState<HospitalLicense[]>(() =>
+    hasRemoteSync ? [] : seedLicenses,
+  )
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(() => {
+    if (typeof window === 'undefined') {
+      return null
+    }
+
+    const saved = Number(localStorage.getItem(LAST_SYNC_STORAGE_KEY))
+    return Number.isFinite(saved) ? saved : null
+  })
 
   const [selectedHospitalId, setSelectedHospitalId] = useState('all')
   const [selectedCategory, setSelectedCategory] = useState<LicenceCategory | 'All'>('All')
 
   const [banner, setBanner] = useState('')
 
-  const [inlineEditId, setInlineEditId] = useState<string | null>(null)
-  const [inlineDraft, setInlineDraft] = useState<InlineDraft>({
-    expiryDate: '',
-    owner: '',
-    category: 'Licence',
-    status: 'Compliant',
-  })
-  const [inlineErrors, setInlineErrors] = useState<{ owner: string; expiryDate: string }>({
-    owner: '',
-    expiryDate: '',
-  })
-
   const [isLicenseModalOpen, setIsLicenseModalOpen] = useState(false)
-  const [licenseModalMode, setLicenseModalMode] = useState<'create' | 'edit'>('create')
-  const [modalLicenseId, setModalLicenseId] = useState<string | null>(null)
   const [modalDraft, setModalDraft] = useState<LicenseDraft>(makeLicenseDraft())
   const [modalErrors, setModalErrors] = useState<LicenseFieldErrors>(emptyLicenseErrors)
 
@@ -74,8 +83,22 @@ export function useDashboardState() {
   const [wizardLicenseErrors, setWizardLicenseErrors] = useState<
     Record<string, LicenseFieldErrors>
   >({})
+  const syncInFlightRef = useRef(false)
 
   useEffect(() => {
+    if (!hasRemoteSync) {
+      return
+    }
+
+    localStorage.removeItem(DASHBOARD_STORAGE_KEY)
+    localStorage.removeItem(LEGACY_RECORD_STORAGE_KEY)
+  }, [hasRemoteSync])
+
+  useEffect(() => {
+    if (hasRemoteSync) {
+      return
+    }
+
     const saved = localStorage.getItem(DASHBOARD_STORAGE_KEY)
     if (saved) {
       try {
@@ -98,11 +121,97 @@ export function useDashboardState() {
       setHospitals(migrated.hospitals)
       setLicenses(migrated.licenses)
     }
-  }, [])
+  }, [hasRemoteSync])
 
   useEffect(() => {
     localStorage.setItem(DASHBOARD_STORAGE_KEY, JSON.stringify({ hospitals, licenses }))
   }, [hospitals, licenses])
+
+  const markSyncSuccess = (syncedAt: number | null = null) => {
+    const timestamp = syncedAt ?? Date.now()
+    setLastSyncedAt(timestamp)
+    localStorage.setItem(LAST_SYNC_STORAGE_KEY, `${timestamp}`)
+  }
+
+  const syncFromGoogleSheets = useCallback(
+    async ({ showSuccessBanner, showErrorBanner, markBusy }: {
+      showSuccessBanner: boolean
+      showErrorBanner: boolean
+      markBusy: boolean
+    }) => {
+      if (!appScriptUrl || syncInFlightRef.current) {
+        return
+      }
+
+      syncInFlightRef.current = true
+      if (markBusy) {
+        setIsSyncing(true)
+      }
+
+      try {
+        const remoteData = await listDashboardData(appScriptUrl)
+        setHospitals(remoteData.hospitals)
+        setLicenses(remoteData.licenses)
+        markSyncSuccess(remoteData.syncedAt)
+
+        if (showSuccessBanner) {
+          setBanner('Synced latest data from Google Sheets.')
+        }
+      } catch {
+        if (showErrorBanner) {
+          setBanner('Google Sheets sync failed. Showing last available local data.')
+        }
+      } finally {
+        syncInFlightRef.current = false
+        if (markBusy) {
+          setIsSyncing(false)
+        }
+      }
+    },
+    [appScriptUrl],
+  )
+
+  useEffect(() => {
+    if (!appScriptUrl) {
+      setBanner('Apps Script URL is missing. Showing local data only.')
+      return
+    }
+
+    void syncFromGoogleSheets({
+      showSuccessBanner: true,
+      showErrorBanner: true,
+      markBusy: true,
+    })
+
+    const runBackgroundSync = () => {
+      void syncFromGoogleSheets({
+        showSuccessBanner: false,
+        showErrorBanner: false,
+        markBusy: false,
+      })
+    }
+
+    const syncOnVisible = () => {
+      if (document.visibilityState === 'visible') {
+        runBackgroundSync()
+      }
+    }
+
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        runBackgroundSync()
+      }
+    }, BACKGROUND_SYNC_INTERVAL_MS)
+
+    window.addEventListener('focus', runBackgroundSync)
+    document.addEventListener('visibilitychange', syncOnVisible)
+
+    return () => {
+      window.clearInterval(intervalId)
+      window.removeEventListener('focus', runBackgroundSync)
+      document.removeEventListener('visibilitychange', syncOnVisible)
+    }
+  }, [appScriptUrl, syncFromGoogleSheets])
 
   useEffect(() => {
     if (!banner) {
@@ -181,15 +290,7 @@ export function useDashboardState() {
     }
   }
 
-  const updateLicense = (id: string, updates: Partial<HospitalLicense>) => {
-    setLicenses((prev) =>
-      prev.map((license) => (license.id === id ? { ...license, ...updates } : license)),
-    )
-  }
-
   const openCreateLicenseModal = () => {
-    setLicenseModalMode('create')
-    setModalLicenseId(null)
     setModalErrors(emptyLicenseErrors)
     setModalDraft({
       hospitalId: selectedHospitalId === 'all' ? hospitals[0]?.id ?? '' : selectedHospitalId,
@@ -204,15 +305,11 @@ export function useDashboardState() {
     setIsLicenseModalOpen(true)
   }
 
-  const openEditLicenseModal = (license: HospitalLicense) => {
-    setLicenseModalMode('edit')
-    setModalLicenseId(license.id)
-    setModalErrors(emptyLicenseErrors)
-    setModalDraft({ ...license })
-    setIsLicenseModalOpen(true)
-  }
+  const saveLicenseModal = async () => {
+    if (isSyncing) {
+      return
+    }
 
-  const saveLicenseModal = () => {
     const errors = validateLicenseFields(modalDraft)
     setModalErrors(errors)
     if (errors.licenceName || errors.category || errors.expiryDate) {
@@ -224,72 +321,32 @@ export function useDashboardState() {
         ? 'In Review'
         : defaultStatusFromExpiry(modalDraft.expiryDate)
 
-    if (licenseModalMode === 'create') {
-      setLicenses((prev) => [
-        ...prev,
-        {
-          ...modalDraft,
-          id: createId('L'),
-          status: nextStatus,
-        },
-      ])
-      setBanner('License added successfully.')
-    } else if (modalLicenseId) {
-      updateLicense(modalLicenseId, {
-        ...modalDraft,
-        status: nextStatus,
-      })
-      setBanner('License details updated successfully.')
+    const nextLicense: HospitalLicense = {
+      ...modalDraft,
+      id: createId('L'),
+      status: nextStatus,
     }
+
+    if (appScriptUrl) {
+      setIsSyncing(true)
+      try {
+        const syncedAt = await upsertLicense(appScriptUrl, nextLicense)
+        markSyncSuccess(syncedAt)
+      } catch {
+        setBanner('Unable to save license to Google Sheets.')
+        return
+      } finally {
+        setIsSyncing(false)
+      }
+    }
+
+    setLicenses((prev) => [
+      ...prev,
+      nextLicense,
+    ])
+    setBanner('License added successfully.')
 
     setIsLicenseModalOpen(false)
-    setModalLicenseId(null)
-  }
-
-  const startInlineEdit = (license: HospitalLicense) => {
-    setInlineEditId(license.id)
-    setInlineErrors({ owner: '', expiryDate: '' })
-    setInlineDraft({
-      expiryDate: license.expiryDate,
-      owner: license.owner,
-      category: license.category,
-      status: license.status,
-    })
-  }
-
-  const cancelInlineEdit = () => {
-    setInlineEditId(null)
-    setInlineErrors({ owner: '', expiryDate: '' })
-  }
-
-  const saveInlineEdit = () => {
-    if (!inlineEditId) {
-      return
-    }
-
-    const errors = {
-      owner: inlineDraft.owner.trim() ? '' : 'Owner is required.',
-      expiryDate: inlineDraft.expiryDate.trim() ? '' : 'Expiry date is required.',
-    }
-    setInlineErrors(errors)
-    if (errors.owner || errors.expiryDate) {
-      return
-    }
-
-    const nextStatus =
-      inlineDraft.status === 'In Review'
-        ? 'In Review'
-        : defaultStatusFromExpiry(inlineDraft.expiryDate)
-
-    updateLicense(inlineEditId, {
-      expiryDate: inlineDraft.expiryDate,
-      owner: inlineDraft.owner,
-      category: inlineDraft.category,
-      status: nextStatus,
-    })
-
-    setInlineEditId(null)
-    setBanner('Inline update saved.')
   }
 
   const exportFiltered = () => {
@@ -369,7 +426,11 @@ export function useDashboardState() {
     })
   }
 
-  const saveWizard = () => {
+  const saveWizard = async () => {
+    if (isSyncing) {
+      return
+    }
+
     const nextErrors: Record<string, LicenseFieldErrors> = {}
     wizardLicenses.forEach((draft) => {
       nextErrors[draft.tempId] = validateLicenseFields(draft)
@@ -404,6 +465,22 @@ export function useDashboardState() {
       status: defaultStatusFromExpiry(draft.expiryDate),
     }))
 
+    if (appScriptUrl) {
+      setIsSyncing(true)
+      try {
+        const syncedAt = await upsertHospitalWithLicenses(appScriptUrl, {
+          hospital: newHospital,
+          licenses: newLicenses,
+        })
+        markSyncSuccess(syncedAt)
+      } catch {
+        setBanner('Unable to create hospital setup in Google Sheets.')
+        return
+      } finally {
+        setIsSyncing(false)
+      }
+    }
+
     setHospitals((prev) => [...prev, newHospital])
     setLicenses((prev) => [...prev, ...newLicenses])
     setSelectedHospitalId(newHospitalId)
@@ -414,14 +491,12 @@ export function useDashboardState() {
   return {
     hospitals,
     licenses,
+    isSyncing,
+    lastSyncedAt,
     selectedHospitalId,
     selectedCategory,
     banner,
-    inlineEditId,
-    inlineDraft,
-    inlineErrors,
     isLicenseModalOpen,
-    licenseModalMode,
     modalDraft,
     modalErrors,
     isWizardOpen,
@@ -440,7 +515,6 @@ export function useDashboardState() {
     upcomingMilestones,
     setSelectedHospitalId,
     setSelectedCategory,
-    setInlineDraft,
     setModalDraft,
     setHospitalDraft,
     setWizardStep,
@@ -448,11 +522,7 @@ export function useDashboardState() {
     setIsWizardOpen,
     setAuthBanner: setBanner,
     openCreateLicenseModal,
-    openEditLicenseModal,
     saveLicenseModal,
-    startInlineEdit,
-    cancelInlineEdit,
-    saveInlineEdit,
     exportFiltered,
     openWizard,
     goWizardNext,
