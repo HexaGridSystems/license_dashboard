@@ -1,4 +1,4 @@
-# Legal Licence Dashboard
+# Compliverse Licence Dashboard
 
 A modern, responsive dashboard for legal and compliance teams to manage hospital obligations across:
 

@@ -27,9 +27,10 @@ body {
 }
 
 #root {
-  max-width: 1280px;
+  width: 100%;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 28px;
+  padding: clamp(14px, 2.4vw, 28px);
 }
 
 h1,

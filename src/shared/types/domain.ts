@@ -5,7 +5,7 @@ export type LicenceCategory =
   | 'Statutory Filing'
   | 'Legal Certificate'
 
-export type LicenceStatus = 'Due Soon' | 'In Review' | 'Compliant' | 'Overdue'
+export type LicenceStatus = 'Due Soon' | 'Active' | 'Expired'
 
 export type RenewalUrgency = 'Low' | 'Medium' | 'Critical' | 'Overdue'
 
@@ -29,6 +29,9 @@ export type HospitalLicense = {
   owner: string
   regulator: string
   status: LicenceStatus
+  remainingDays?: number | null
+  action?: string
+  documents?: string
 }
 
 export type LicenseDraft = Omit<HospitalLicense, 'id'>

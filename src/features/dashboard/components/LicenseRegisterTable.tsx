@@ -1,41 +1,71 @@
 import { formatDisplayDate } from '../../../shared/utils/date'
 import type { EnrichedLicense } from '../hooks/useDashboardState'
 import styles from './DashboardPage.module.css'
-import { cx } from './utils'
 
 type LicenseRegisterTableProps = {
   licenses: EnrichedLicense[]
 }
 
+function toDocumentLink(value: string) {
+  const raw = value.trim()
+  if (!raw) {
+    return null
+  }
+
+  const withProtocol = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`
+
+  try {
+    const parsed = new URL(withProtocol)
+    if (!/^https?:$/i.test(parsed.protocol)) {
+      return null
+    }
+    return parsed.toString()
+  } catch {
+    return null
+  }
+}
+
 export function LicenseRegisterTable(props: LicenseRegisterTableProps) {
   const { licenses } = props
 
+  const getActionLabel = (status: EnrichedLicense['status']) => {
+    if (status === 'Expired') {
+      return 'Renew now'
+    }
+
+    if (status === 'Due Soon') {
+      return 'Follow up'
+    }
+
+    return 'Monitor'
+  }
+
   return (
-    <article className={cx(styles.card, styles.register)}>
+    <article className={`${styles.card} ${styles.register}`}>
       <div className={styles.sectionHead}>
         <h3>Licence Register</h3>
       </div>
       <p className={styles.sectionHelp}>
-        Review complete license details and monitor renewal urgency across all hospitals.
+        Track each hospital license lifecycle in one place.
       </p>
       <div className={styles.tableWrap}>
         <table>
           <thead>
             <tr>
-              <th>Licence Name</th>
-              <th>Hospital</th>
+              <th>Serial Number</th>
+              <th>License/Vendor name</th>
               <th>Category</th>
-              <th>Issue Date</th>
-              <th>Expiry Date</th>
-              <th>Countdown</th>
-              <th>Alerts</th>
-              <th>Urgency</th>
-              <th>Owner</th>
+              <th>Licence Number</th>
+              <th>Valid from</th>
+              <th>Valid till</th>
+              <th>Remaining days</th>
               <th>Status</th>
+              <th>Action</th>
+              <th>Documents</th>
             </tr>
           </thead>
           <tbody>
-            {licenses.map((license) => (
+            {licenses.map((license, index) => (
               <tr
                 key={license.id}
                 className={
@@ -44,35 +74,44 @@ export function LicenseRegisterTable(props: LicenseRegisterTableProps) {
                     : ''
                 }
               >
-                <td>{license.licenceName}</td>
-                <td>{license.hospitalName}</td>
-                <td>{license.category}</td>
-                <td>{formatDisplayDate(license.issueDate)}</td>
-                <td>{formatDisplayDate(license.expiryDate)}</td>
-                <td>{license.renewal.countdownLabel}</td>
-                <td>
-                  <div className={styles.alertChips}>
-                    {license.renewal.reminder3Months ? (
-                      <span className={cx(styles.badge, styles.alertChip)}>90D Alert</span>
-                    ) : null}
-                    {license.renewal.reminder15Days ? (
-                      <span className={cx(styles.badge, styles.alertChip, styles.criticalChip)}>15D Alert</span>
-                    ) : null}
-                    {!license.renewal.reminder3Months && !license.renewal.reminder15Days ? (
-                      <span className={styles.alertMuted}>None</span>
-                    ) : null}
-                  </div>
+                <td data-label="Serial Number">{index + 1}</td>
+                <td data-label="License/Vendor name">{license.licenceName}</td>
+                <td data-label="Category">{license.category}</td>
+                <td data-label="Licence Number">{license.id}</td>
+                <td data-label="Valid from">{formatDisplayDate(license.issueDate)}</td>
+                <td data-label="Valid till">{formatDisplayDate(license.expiryDate)}</td>
+                <td data-label="Remaining days">
+                  {license.remainingDays ?? license.renewal.countdownDays ?? '-'}
                 </td>
-                <td>
-                  <span className={styles.badge} data-urgency={license.renewal.urgency}>
-                    {license.renewal.urgency}
-                  </span>
-                </td>
-                <td>{license.owner || '-'}</td>
-                <td>
+                <td data-label="Status">
                   <span className={styles.badge} data-status={license.status}>
                     {license.status}
                   </span>
+                </td>
+                <td data-label="Action">{license.action || getActionLabel(license.status)}</td>
+                <td data-label="Documents">
+                  {(() => {
+                    const documentsValue = license.documents?.trim() || ''
+                    if (!documentsValue) {
+                      return '-'
+                    }
+
+                    const href = toDocumentLink(documentsValue)
+                    if (!href) {
+                      return <span className={styles.docText}>{documentsValue}</span>
+                    }
+
+                    return (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.docLink}
+                      >
+                        Click to open
+                      </a>
+                    )
+                  })()}
                 </td>
               </tr>
             ))}

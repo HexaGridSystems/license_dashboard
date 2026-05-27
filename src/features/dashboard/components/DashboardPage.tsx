@@ -1,13 +1,15 @@
+import { useRef } from 'react'
 import type { ThemeMode } from '../../../shared/types/domain'
 import type { useDashboardState } from '../hooks/useDashboardState'
 import styles from './DashboardPage.module.css'
+import { exportElementToPdf } from '../../../shared/utils/exportPdf'
 import { ControlsBar } from './ControlsBar'
 import { DashboardHeader } from './DashboardHeader'
 import { HospitalDirectory } from './HospitalDirectory'
 import { KpiCards } from './KpiCards'
 import { LicenseModal } from './LicenseModal'
 import { LicenseRegisterTable } from './LicenseRegisterTable'
-import { SidePanels } from './SidePanels'
+import { StatusDonutPanel } from './StatusDonutPanel'
 import { WizardModal } from './WizardModal'
 
 type DashboardPageProps = {
@@ -19,14 +21,13 @@ type DashboardPageProps = {
 
 export function DashboardPage(props: DashboardPageProps) {
   const { themeMode, onToggleTheme, onLogout, state } = props
+  const contentGridRef = useRef<HTMLElement | null>(null)
 
   const {
     hospitals,
-    licenses,
     isSyncing,
     lastSyncedAt,
-    selectedHospitalId,
-    selectedCategory,
+    selectedStatus,
     banner,
     isLicenseModalOpen,
     modalDraft,
@@ -37,22 +38,17 @@ export function DashboardPage(props: DashboardPageProps) {
     hospitalErrors,
     wizardLicenses,
     wizardLicenseErrors,
-    hospitalCounts,
     enrichedFilteredLicenses,
-    criticalCount,
-    dueSoonCount,
-    compliantCount,
-    totalHospitals,
-    actionQueue,
-    upcomingMilestones,
-    setSelectedHospitalId,
-    setSelectedCategory,
+    activeLicensesCount,
+    expiredLicensesCount,
+    dueSoonLicensesCount,
+    setSelectedStatus,
     setModalDraft,
     setHospitalDraft,
     setWizardStep,
     setIsLicenseModalOpen,
     setIsWizardOpen,
-    openCreateLicenseModal,
+    setAuthBanner,
     saveLicenseModal,
     exportFiltered,
     goWizardNext,
@@ -62,13 +58,29 @@ export function DashboardPage(props: DashboardPageProps) {
     saveWizard,
   } = state
 
+  const handleExportPdf = async () => {
+    const exportNode = contentGridRef.current
+    if (!exportNode) {
+      setAuthBanner('PDF export failed. Dashboard section is not available yet.')
+      return
+    }
+
+    try {
+      await exportElementToPdf({
+        element: exportNode,
+        filePrefix: 'Licence dashboard',
+        title: 'Licence Dashboard Report',
+      })
+      setAuthBanner('PDF export opened. Choose Save as PDF to download.')
+    } catch {
+      setAuthBanner('PDF export failed. Please allow popups and try again.')
+    }
+  }
+
   return (
     <div className={styles.dashboardShell}>
       <DashboardHeader
         themeMode={themeMode}
-        totalHospitals={totalHospitals}
-        totalLicenses={licenses.length}
-        criticalCount={criticalCount}
         lastSyncedAt={lastSyncedAt}
         onToggleTheme={onToggleTheme}
         onLogout={onLogout}
@@ -76,34 +88,27 @@ export function DashboardPage(props: DashboardPageProps) {
 
       {banner ? <p className={styles.statusBanner}>{banner}</p> : null}
 
-      <HospitalDirectory
-        hospitals={hospitals}
-        selectedHospitalId={selectedHospitalId}
-        totalLicenses={licenses.length}
-        hospitalCounts={hospitalCounts}
-        onSelectHospital={setSelectedHospitalId}
-      />
+      <HospitalDirectory />
 
       <KpiCards
         totalLicenses={enrichedFilteredLicenses.length}
-        criticalCount={criticalCount}
-        dueSoonCount={dueSoonCount}
-        compliantCount={compliantCount}
+        activeLicensesCount={activeLicensesCount}
+        expiredLicensesCount={expiredLicensesCount}
+        dueSoonLicensesCount={dueSoonLicensesCount}
       />
 
       <ControlsBar
-        selectedCategory={selectedCategory}
-        onSelectCategory={setSelectedCategory}
-        onOpenCreateLicense={openCreateLicenseModal}
+        selectedStatus={selectedStatus}
+        onSelectStatus={setSelectedStatus}
         onExport={exportFiltered}
+        onExportPdf={handleExportPdf}
       />
 
-      <section className={styles.contentGrid}>
-        <SidePanels actionQueue={actionQueue} upcomingMilestones={upcomingMilestones} />
-
+      <section className={styles.contentGrid} ref={contentGridRef}>
         <LicenseRegisterTable
           licenses={enrichedFilteredLicenses}
         />
+        <StatusDonutPanel licenses={enrichedFilteredLicenses} />
       </section>
 
       {isLicenseModalOpen ? (

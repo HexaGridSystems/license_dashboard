@@ -37,7 +37,10 @@ export function LoginPage(props: LoginPageProps) {
     <div className={styles.loginShell}>
       <article className={styles.loginCard}>
         <div className={styles.loginHead}>
-          <p className={styles.eyebrow}>Hospital Legal Operations</p>
+          <a href="/" className={styles.backToSite}>
+            Back to site
+            <span className={styles.linkArrow} aria-hidden="true">-&gt;</span>
+          </a>
           <button
             type="button"
             className={styles.themeToggle}
@@ -59,9 +62,9 @@ export function LoginPage(props: LoginPageProps) {
           </button>
         </div>
 
-        <h1 className={styles.title}>Sign In to Legal Licence Dashboard</h1>
+        <h1 className={styles.title}>Sign In to Compliverse Licence Dashboard</h1>
         <p className={styles.helpText}>
-          Access hospital license renewals, reminders, permits, and statutory filings.
+          Access Licence Dashboard for Real-Time Compliance Monitoring and Renewal Tracking.
         </p>
 
         <form className={styles.loginForm} onSubmit={handleSubmit}>

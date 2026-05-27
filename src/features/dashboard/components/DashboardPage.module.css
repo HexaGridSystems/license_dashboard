@@ -1,6 +1,7 @@
 .dashboardShell {
   display: grid;
   gap: 16px;
+  min-width: 0;
 }
 
 .card {
@@ -97,6 +98,28 @@
   cursor: pointer;
   padding: 8px 12px;
   border: 1px solid var(--card-border-strong);
+}
+
+.backToSite {
+  border: 1px solid var(--card-border-strong);
+  background: var(--surface);
+  color: var(--text-main);
+  border-radius: 999px;
+  padding: 8px 12px;
+  text-decoration: none;
+  font-size: 0.84rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.backToSite:hover {
+  background: var(--surface-soft);
+}
+
+.linkArrow {
+  font-size: 0.72rem;
+  line-height: 1;
 }
 
 .secondaryAction {
@@ -252,10 +275,126 @@
   flex-wrap: wrap;
 }
 
+.exportPdfButton {
+  border-color: color-mix(in srgb, var(--button-secondary-text) 24%, var(--card-border-strong));
+  background: color-mix(in srgb, var(--button-secondary-bg) 78%, var(--surface));
+  color: var(--button-secondary-text);
+}
+
+.exportReportButton {
+  border-color: color-mix(in srgb, var(--status-success-border) 75%, var(--card-border-strong));
+  background: color-mix(in srgb, var(--status-success-bg) 72%, var(--surface));
+  color: var(--status-success-text);
+}
+
 .contentGrid {
   display: grid;
-  grid-template-columns: 1fr 1.7fr;
+  grid-template-columns: minmax(0, 2.35fr) minmax(220px, 0.65fr);
+  align-items: start;
   gap: 16px;
+  min-width: 0;
+}
+
+.statusPanel {
+  padding: 14px;
+  width: min(260px, 100%);
+  justify-self: end;
+}
+
+.donutLayout {
+  display: grid;
+  gap: 16px;
+}
+
+.donutChart {
+  width: 142px;
+  height: 142px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  margin: 4px auto 0;
+  position: relative;
+}
+
+.donutSvg {
+  width: 100%;
+  height: 100%;
+}
+
+.donutTrack {
+  fill: none;
+  stroke: #d9dee5;
+  stroke-width: 28;
+}
+
+.donutHole {
+  width: 62%;
+  height: 62%;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  display: grid;
+  place-items: center;
+  text-align: center;
+  position: absolute;
+}
+
+.donutHole strong {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.donutHole span {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: -2px;
+}
+
+.statusLegend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.statusLegend li {
+  display: grid;
+  grid-template-columns: 10px 1fr auto auto;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 8px;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+}
+
+.statusDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--status-color);
+}
+
+.statusLabel {
+  font-size: 0.8rem;
+}
+
+.statusLegend strong {
+  font-size: 0.8rem;
+}
+
+.statusLegend small {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+@media print {
+  .donutSvg,
+  .statusDot,
+  .badge {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
 
 .stackedPanels {
@@ -269,6 +408,7 @@
 
 .register {
   padding: 18px;
+  min-width: 0;
 }
 
 .sectionHead {
@@ -291,20 +431,21 @@
 .tableWrap {
   overflow: auto;
   max-height: 540px;
+  width: 100%;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 940px;
+  min-width: 980px;
 }
 
 th,
 td {
   text-align: left;
-  padding: 12px 10px;
+  padding: 10px 8px;
   border-bottom: 1px solid var(--card-border);
-  font-size: 0.88rem;
+  font-size: 0.84rem;
 }
 
 thead th {
@@ -358,23 +499,36 @@ td select,
 }
 
 .badge[data-urgency='Low'],
-.badge[data-status='Compliant'] {
+.badge[data-status='Active'] {
   color: #1d7a58;
   background: #dbf6ea;
 }
 
 .badge[data-urgency='Medium'],
-.badge[data-status='Due Soon'],
-.badge[data-status='In Review'] {
+.badge[data-status='Due Soon'] {
   color: #925e00;
   background: #fff2d8;
 }
 
 .badge[data-urgency='Critical'],
 .badge[data-urgency='Overdue'],
-.badge[data-status='Overdue'] {
+.badge[data-status='Expired'] {
   color: #9f3b2d;
   background: #fde7e2;
+}
+
+.docLink {
+  color: var(--button-secondary-text);
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.docLink:hover {
+  text-decoration-thickness: 2px;
+}
+
+.docText {
+  word-break: break-word;
 }
 
 .alertChips {
@@ -502,9 +656,21 @@ td select,
 }
 
 @media (max-width: 1080px) {
-  .statsGrid,
   .contentGrid {
     grid-template-columns: 1fr;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .statusPanel {
+    width: 100%;
+    justify-self: stretch;
+  }
+
+  table {
+    min-width: 920px;
   }
 
   .heroRow {
@@ -520,7 +686,7 @@ td select,
   }
 }
 
-@media (max-width: 760px) {
+@media screen and (max-width: 760px) {
   .heroPanel,
   .register,
   .stackedPanels .card,
@@ -540,5 +706,99 @@ td select,
 
   .heroKpis {
     gap: 6px;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .segmented,
+  .actionBar {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .segmented button,
+  .actionBar button {
+    width: 100%;
+  }
+
+  .heroActions {
+    width: 100%;
+    justify-items: stretch;
+  }
+
+  .reportPill,
+  .backToSite,
+  .ghost,
+  .themeToggle {
+    justify-content: center;
+  }
+
+  .statusPanel {
+    order: -1;
+  }
+
+  .tableWrap {
+    max-height: none;
+    overflow: visible;
+  }
+
+  table {
+    min-width: 0;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tbody {
+    display: grid;
+    gap: 10px;
+  }
+
+  tbody tr {
+    display: grid;
+    gap: 8px;
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    background: var(--surface);
+    padding: 10px;
+  }
+
+  tbody tr:nth-child(odd),
+  tbody tr:hover {
+    background: var(--surface);
+  }
+
+  td {
+    display: grid;
+    grid-template-columns: minmax(120px, 42%) minmax(0, 1fr);
+    gap: 10px;
+    border-bottom: 0;
+    padding: 0;
+    font-size: 0.82rem;
+    align-items: start;
+  }
+
+  td::before {
+    content: attr(data-label);
+    color: var(--text-muted);
+    font-size: 0.76rem;
+    font-weight: 600;
+  }
+}
+
+@media screen and (max-width: 560px) {
+  td {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  td::before {
+    font-size: 0.72rem;
   }
 }

@@ -12,88 +12,59 @@ type ApiEnvelope = {
   syncedAt?: unknown
 }
 
-type LegacyLicenseRow = {
-  id?: unknown
-  'Licence Name'?: unknown
-  Category?: unknown
-  Authority?: unknown
-  'Valid From'?: unknown
-  'Expiry Date'?: unknown
-  Status?: unknown
-  Risk?: unknown
-  'Assigned Lawyer'?: unknown
-  'Next Action'?: unknown
-  'Document Link'?: unknown
-}
-
 function buildUrl(baseUrl: string, action: string) {
   const separator = baseUrl.includes('?') ? '&' : '?'
   return `${baseUrl}${separator}action=${encodeURIComponent(action)}`
 }
 
-function asString(value: unknown) {
-  return typeof value === 'string' ? value : ''
+function withTimestamp(url: string) {
+  const separator = url.includes('?') ? '&' : '?'
+  return `${url}${separator}t=${Date.now()}`
 }
 
-function normalizeCategory(value: string): HospitalLicense['category'] {
-  const allowed: HospitalLicense['category'][] = [
-    'Licence',
-    'Renewal',
-    'Permit',
-    'Statutory Filing',
-    'Legal Certificate',
-  ]
+function asString(value: unknown) {
+  if (value === null || value === undefined) {
+    return ''
+  }
 
-  return allowed.includes(value as HospitalLicense['category'])
-    ? (value as HospitalLicense['category'])
-    : 'Licence'
+  return String(value).trim()
+}
+
+function asNumberOrNull(value: unknown) {
+  if (value === null || value === undefined || value === '') {
+    return null
+  }
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value
+  }
+
+  const parsed = Number(String(value).trim())
+  return Number.isFinite(parsed) ? parsed : null
 }
 
 function normalizeStatus(value: string): HospitalLicense['status'] {
   const normalized = value.trim().toLowerCase()
-  if (normalized.includes('review')) {
-    return 'In Review'
+  if (
+    normalized.includes('expired') ||
+    normalized.includes('overdue') ||
+    normalized === 'inactive'
+  ) {
+    return 'Expired'
   }
-  if (normalized.includes('overdue')) {
-    return 'Overdue'
-  }
-  if (normalized.includes('due')) {
+  if (normalized.includes('due') || normalized.includes('review')) {
     return 'Due Soon'
   }
-  return 'Compliant'
-}
 
-function toLegacyListResponse(rows: LegacyLicenseRow[]): ListResponse {
-  const defaultHospital: Hospital = {
-    id: 'H-001',
-    name: 'Default Hospital',
-    address: '',
-    contactPerson: '',
-    complianceOwner: '',
+  if (
+    normalized.includes('active') ||
+    normalized.includes('valid') ||
+    normalized.includes('compliant')
+  ) {
+    return 'Active'
   }
 
-  const licenses = rows.map((row, index) => {
-    const category = normalizeCategory(asString(row.Category))
-    const status = normalizeStatus(asString(row.Status))
-
-    return {
-      id: asString(row.id) || `L-LEGACY-${index + 1}`,
-      hospitalId: defaultHospital.id,
-      licenceName: asString(row['Licence Name']),
-      category,
-      issueDate: asString(row['Valid From']),
-      expiryDate: asString(row['Expiry Date']),
-      owner: asString(row['Assigned Lawyer']),
-      regulator: asString(row.Authority),
-      status,
-    } satisfies HospitalLicense
-  })
-
-  return {
-    hospitals: [defaultHospital],
-    licenses,
-    syncedAt: null,
-  }
+  return 'Active'
 }
 
 function parseSyncedAt(value: unknown): number | null {
@@ -116,33 +87,107 @@ function parseSyncedAt(value: unknown): number | null {
 
 function normalizeHospital(value: unknown): Hospital {
   const row = value as Record<string, unknown>
+
+  const pickString = (...keys: string[]) => {
+    for (const key of keys) {
+      const candidate = asString(row[key])
+      if (candidate) {
+        return candidate
+      }
+    }
+
+    return ''
+  }
+
   return {
-    id: asString(row.id),
-    name: asString(row.name),
-    address: asString(row.address),
-    contactPerson: asString(row.contactPerson),
-    complianceOwner: asString(row.complianceOwner),
+    id: pickString('id', 'ID', 'Hospital ID'),
+    name: pickString('name', 'Name', 'Hospital Name'),
+    address: pickString('address', 'Address'),
+    contactPerson: pickString('contactPerson', 'Contact Person'),
+    complianceOwner: pickString('complianceOwner', 'Compliance Owner'),
   }
 }
 
 function normalizeLicense(value: unknown): HospitalLicense {
   const row = value as Record<string, unknown>
-  return {
-    id: asString(row.id),
-    hospitalId: asString(row.hospitalId),
-    licenceName: asString(row.licenceName),
-    category: asString(row.category) as HospitalLicense['category'],
-    issueDate: asString(row.issueDate),
-    expiryDate: asString(row.expiryDate),
-    owner: asString(row.owner),
-    regulator: asString(row.regulator),
-    status: asString(row.status) as HospitalLicense['status'],
+
+  const pickString = (...keys: string[]) => {
+    for (const key of keys) {
+      const candidate = asString(row[key])
+      if (candidate) {
+        return candidate
+      }
+    }
+
+    return ''
   }
+
+  return {
+    id: pickString('id', 'Licence Number', 'License Number', 'Serial Number'),
+    hospitalId: pickString('hospitalId', 'Hospital ID', 'Hospital Id'),
+    licenceName: pickString(
+      'licenceName',
+      'License/Vendor name',
+      'License/Vendor Name',
+      'License/Vendor Name ',
+      'Licence Name',
+      'License Name',
+    ),
+    category: pickString('category', 'Category') as HospitalLicense['category'],
+    issueDate: pickString('issueDate', 'Valid from', 'Valid From', 'Issue Date'),
+    expiryDate: pickString(
+      'expiryDate',
+      'Valid till',
+      'Valid Till',
+      'Valid To',
+      'Expiry Date',
+      'Expiration Date',
+    ),
+    owner: '',
+    regulator: '',
+    status: normalizeStatus(pickString('status', 'Status')),
+    remainingDays: asNumberOrNull(row['Remaining days']),
+    action: pickString('action', 'Action'),
+    documents: pickString('documents', 'Documents', 'Document', 'Docs'),
+  }
+}
+
+function mapRowsToLicenses(rows: unknown[], fallbackHospitalId: string) {
+  return rows.map((value, index) => {
+    const row = value as Record<string, unknown>
+    const normalized = normalizeLicense(value)
+    const stableId =
+      normalized.id ||
+      asString(row['Licence Number']) ||
+      asString(row['License Number']) ||
+      asString(row['Serial Number']) ||
+      `L-ROW-${index + 1}`
+
+    return {
+      ...normalized,
+      id: stableId,
+      // Licences sheet can omit Hospital ID; keep records visible under one default hospital.
+      hospitalId: normalized.hospitalId || fallbackHospitalId,
+    }
+  })
 }
 
 function parseListResponse(data: unknown): ListResponse {
   if (Array.isArray(data)) {
-    return toLegacyListResponse(data as LegacyLicenseRow[])
+    const fallbackHospitalId = 'H-001'
+    return {
+      hospitals: [
+        {
+          id: fallbackHospitalId,
+          name: 'Primary Hospital',
+          address: '',
+          contactPerson: '',
+          complianceOwner: '',
+        },
+      ],
+      licenses: mapRowsToLicenses(data, fallbackHospitalId),
+      syncedAt: null,
+    }
   }
 
   const payload = data as Record<string, unknown>
@@ -150,15 +195,28 @@ function parseListResponse(data: unknown): ListResponse {
   const licensesRaw = payload.licenses
   const syncedAtRaw = payload.syncedAt
 
-  if (!Array.isArray(hospitalsRaw) || !Array.isArray(licensesRaw)) {
-    throw new Error('Apps Script response must be either legacy rows[] or include hospitals[] and licenses[].')
+  if (!Array.isArray(licensesRaw)) {
+    throw new Error('Apps Script response must be either legacy rows[] or include licenses[].')
   }
 
-  const hospitals = hospitalsRaw.map(normalizeHospital)
-  const licenses = licensesRaw.map(normalizeLicense)
+  const hospitals = Array.isArray(hospitalsRaw) ? hospitalsRaw.map(normalizeHospital) : []
+  const fallbackHospitalId = hospitals[0]?.id ?? 'H-001'
+  const licenses = mapRowsToLicenses(licensesRaw, fallbackHospitalId)
+
+  const resolvedHospitals = hospitals.length > 0
+    ? hospitals
+    : [
+        {
+          id: fallbackHospitalId,
+          name: 'Primary Hospital',
+          address: '',
+          contactPerson: '',
+          complianceOwner: '',
+        },
+      ]
 
   return {
-    hospitals,
+    hospitals: resolvedHospitals,
     licenses,
     syncedAt: parseSyncedAt(syncedAtRaw),
   }
@@ -185,17 +243,44 @@ function assertApiSuccess(data: unknown) {
 }
 
 export async function listDashboardData(baseUrl: string): Promise<ListResponse> {
-  const response = await fetch(buildUrl(baseUrl, 'list'), {
-    method: 'GET',
+  const requestUrl = withTimestamp(buildUrl(baseUrl, 'list'))
+  const startedAt = new Date().toISOString()
+
+  console.log('[Dashboard Sync] list fetch started', {
+    url: requestUrl,
+    startedAt,
   })
 
-  if (!response.ok) {
-    throw new Error(`Fetch failed with status ${response.status}.`)
-  }
+  try {
+    const response = await fetch(requestUrl, {
+      method: 'GET',
+      cache: 'no-store',
+    })
 
-  const data = await parseJsonResponse(response)
-  assertApiSuccess(data)
-  return parseListResponse(data)
+    console.log('[Dashboard Sync] list fetch response received', {
+      status: response.status,
+      ok: response.ok,
+    })
+
+    if (!response.ok) {
+      throw new Error(`Fetch failed with status ${response.status}.`)
+    }
+
+    const data = await parseJsonResponse(response)
+    assertApiSuccess(data)
+    const parsed = parseListResponse(data)
+
+    console.log('[Dashboard Sync] list fetch parsed successfully', {
+      hospitals: parsed.hospitals.length,
+      licenses: parsed.licenses.length,
+      syncedAt: parsed.syncedAt,
+    })
+
+    return parsed
+  } catch (error) {
+    console.error('[Dashboard Sync] list fetch failed', error)
+    throw error
+  }
 }
 
 export async function upsertLicense(baseUrl: string, license: HospitalLicense) {

@@ -120,10 +120,9 @@ export function LicenseModal(props: LicenseModalProps) {
                 }))
               }
             >
+              <option value="Active">Active</option>
               <option value="Due Soon">Due Soon</option>
-              <option value="In Review">In Review</option>
-              <option value="Compliant">Compliant</option>
-              <option value="Overdue">Overdue</option>
+              <option value="Expired">Expired</option>
             </select>
           </label>
         </div>

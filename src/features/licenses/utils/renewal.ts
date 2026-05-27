@@ -56,13 +56,13 @@ export function getRenewalSignals(expiryDate: string) {
 export function defaultStatusFromExpiry(expiryDate: string): LicenceStatus {
   const days = daysUntil(expiryDate)
   if (days === null) {
-    return 'In Review'
+    return 'Due Soon'
   }
   if (days < 0) {
-    return 'Overdue'
+    return 'Expired'
   }
   if (days <= 90) {
     return 'Due Soon'
   }
-  return 'Compliant'
+  return 'Active'
 }

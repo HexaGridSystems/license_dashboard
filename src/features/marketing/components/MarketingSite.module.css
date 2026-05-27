@@ -1,0 +1,441 @@
+.shell {
+  display: grid;
+  gap: 1.8rem;
+}
+
+.siteHeader {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  margin: calc(-1 * clamp(14px, 2.4vw, 28px)) calc(-1 * clamp(14px, 2.4vw, 28px)) 0;
+}
+
+.navCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem clamp(14px, 2.4vw, 28px);
+  border-radius: 0;
+  transition: background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease, backdrop-filter 0.22s ease;
+}
+
+.navCardScrolled {
+  background: color-mix(in srgb, var(--card-bg) 78%, transparent);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 14px 28px rgba(12, 39, 60, 0.12);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 0.55rem clamp(14px, 2.4vw, 28px);
+}
+
+.brandBlock {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.brand {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.tagline {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.menuToggle {
+  display: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid var(--card-border-strong);
+  background: rgba(255, 255, 255, 0.55);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.menuBar {
+  width: 16px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--text-main);
+}
+
+.navLink,
+.navLinkActive,
+.ctaButton,
+.ghostButton {
+  border-radius: 999px;
+  border: 1px solid transparent;
+  padding: 0.55rem 0.9rem;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.92rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.navLink {
+  color: var(--text-main);
+}
+
+.navLink:hover {
+  background: color-mix(in srgb, var(--surface-tint) 75%, transparent);
+}
+
+.navLinkActive {
+  color: #f7fcff;
+  background: linear-gradient(130deg, #0e6a97, #0f7f96);
+}
+
+.ctaButton {
+  color: #f7fcff;
+  background: linear-gradient(120deg, #0f6d9e, #0d5780);
+  box-shadow: 0 10px 24px rgba(13, 87, 128, 0.25);
+}
+
+.ctaButton:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.ghostButton {
+  background: transparent;
+  border-color: var(--card-border-strong);
+  color: var(--text-soft);
+}
+
+.ghostButton:hover {
+  border-color: #2f7598;
+  color: var(--text-main);
+}
+
+.themeIconButton {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.themeIconButton svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-width: 1.4;
+}
+
+.themeIconButton svg circle {
+  fill: currentColor;
+  stroke: none;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.page {
+  display: grid;
+  gap: 2rem;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 1.4rem;
+  align-items: stretch;
+}
+
+.heroPanel,
+.heroVisual {
+  border-radius: 26px;
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow-soft);
+}
+
+.heroPanel {
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--surface) 92%, transparent),
+    color-mix(in srgb, var(--surface-tint) 88%, transparent)
+  );
+  padding: clamp(1.2rem, 2.8vw, 2.1rem);
+}
+
+.heroTitle {
+  margin: 0;
+  max-width: 16ch;
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1.05;
+}
+
+.heroLead {
+  margin: 0;
+  margin-top: 0.9rem;
+  max-width: 60ch;
+  color: var(--text-soft);
+  font-size: 1.05rem;
+}
+
+.buttonRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.heroVisual {
+  position: relative;
+  overflow: hidden;
+  padding: 1.3rem;
+  background:
+    radial-gradient(circle at 14% 10%, color-mix(in srgb, #1792c2 22%, transparent), transparent 55%),
+    radial-gradient(circle at 90% 95%, color-mix(in srgb, #f2ab40 20%, transparent), transparent 52%),
+    linear-gradient(
+      150deg,
+      color-mix(in srgb, var(--surface-soft) 94%, transparent),
+      color-mix(in srgb, var(--surface-tint) 90%, transparent)
+    );
+}
+
+.signalStrip {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.signalDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #48a6d5;
+}
+
+.signalDot:nth-child(2) {
+  background: #f4b84e;
+}
+
+.signalDot:nth-child(3) {
+  background: #e2745d;
+}
+
+.visualHeading {
+  margin: 0.9rem 0 0;
+  max-width: 17ch;
+  line-height: 1.15;
+}
+
+.visualGrid {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.statCard {
+  padding: 0.7rem;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--card-border-strong) 62%, transparent);
+  background: color-mix(in srgb, var(--surface) 84%, transparent);
+}
+
+.statLabel {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.statValue {
+  margin: 0.35rem 0 0;
+  font-size: 1.35rem;
+  color: var(--text-heading);
+  font-weight: 700;
+}
+
+.section {
+  border-radius: 24px;
+  border: 1px solid var(--card-border);
+  padding: clamp(1rem, 2.5vw, 1.65rem);
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: clamp(1.35rem, 3.1vw, 2rem);
+}
+
+.sectionLead {
+  margin: 0.55rem 0 0;
+  color: var(--text-soft);
+  max-width: 65ch;
+}
+
+.grid3 {
+  margin-top: 1.1rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.infoCard {
+  padding: 0.9rem;
+  border-radius: 16px;
+  border: 1px solid var(--card-border);
+  background: var(--surface-soft);
+}
+
+.infoCard h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.infoCard p {
+  margin: 0.42rem 0 0;
+  color: var(--text-soft);
+  line-height: 1.45;
+}
+
+.list {
+  margin: 0.9rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--text-soft);
+  display: grid;
+  gap: 0.45rem;
+}
+
+.productFrame {
+  margin-top: 1rem;
+  border-radius: 20px;
+  border: 1px solid var(--card-border-strong);
+  background: linear-gradient(155deg, rgba(227, 245, 255, 0.58), rgba(255, 247, 232, 0.58));
+  padding: 1.1rem;
+}
+
+.productFrame p {
+  margin: 0.5rem 0 0;
+  color: var(--text-soft);
+}
+
+.contactCard {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.75rem;
+  border-radius: 18px;
+  border: 1px solid var(--card-border);
+  background: linear-gradient(155deg, rgba(237, 248, 255, 0.8), rgba(255, 254, 249, 0.8));
+  padding: 1.15rem;
+}
+
+.contactButton {
+  width: fit-content;
+  color: #f4fcff;
+  background: linear-gradient(125deg, #176f8f, #215084);
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.6rem 0.95rem;
+}
+
+.footerCard {
+  padding: 0.9rem 0.2rem 1.6rem;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.footerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.miniBadgeRow {
+  margin-top: 0.95rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.miniBadge {
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  padding: 0.3rem 0.66rem;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  background: rgba(255, 255, 255, 0.65);
+}
+
+@media (max-width: 880px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .menuToggle {
+    display: inline-flex;
+  }
+
+  .navLinks {
+    display: none;
+    width: 100%;
+    padding-top: 0.4rem;
+    border-top: 1px solid var(--card-border);
+  }
+
+  .navLinksOpen {
+    display: flex;
+  }
+
+  .navLinks .navLink,
+  .navLinks .navLinkActive,
+  .navLinks .ctaButton {
+    width: 100%;
+    text-align: left;
+  }
+
+  .navLinks .ghostButton {
+    width: 100%;
+    text-align: left;
+  }
+
+  .navLinks .themeIconButton {
+    width: 40px;
+    text-align: center;
+  }
+
+  .visualGrid,
+  .grid3 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+
+  .navCard {
+    align-items: start;
+    flex-direction: column;
+  }
+}

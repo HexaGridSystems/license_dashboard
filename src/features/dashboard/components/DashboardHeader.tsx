@@ -4,9 +4,6 @@ import { cx } from './utils'
 
 type DashboardHeaderProps = {
   themeMode: ThemeMode
-  totalHospitals: number
-  totalLicenses: number
-  criticalCount: number
   lastSyncedAt: number | null
   onToggleTheme: () => void
   onLogout: () => void
@@ -15,9 +12,6 @@ type DashboardHeaderProps = {
 export function DashboardHeader(props: DashboardHeaderProps) {
   const {
     themeMode,
-    totalHospitals,
-    totalLicenses,
-    criticalCount,
     lastSyncedAt,
     onToggleTheme,
     onLogout,
@@ -38,21 +32,18 @@ export function DashboardHeader(props: DashboardHeaderProps) {
 
   return (
     <header className={cx(styles.heroPanel, styles.card)}>
-      <p className={styles.eyebrow}>Hospital Legal Operations</p>
       <div className={styles.heroRow}>
         <div>
-          <h1>Legal Licence Dashboard</h1>
+          <h1>Compliverse Licence Dashboard</h1>
           <p className={styles.heroSubtitle}>
-            Create hospitals first, then manage all license details, reminders,
-            renewals, and urgency from one register.
+            License Tracking Made Simple
           </p>
-          <div className={styles.heroKpis}>
-            <span>Total Hospitals: {totalHospitals}</span>
-            <span>Total Licenses: {totalLicenses}</span>
-            <span>Urgent Now: {criticalCount}</span>
-          </div>
         </div>
         <div className={styles.heroActions}>
+          <a href="/" className={styles.backToSite}>
+            Back to site
+            <span className={styles.linkArrow} aria-hidden="true">-&gt;</span>
+          </a>
           <div className={styles.reportPill}>Last sync: {formattedLastSync}</div>
           <button
             type="button"

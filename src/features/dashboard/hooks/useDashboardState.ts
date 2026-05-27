@@ -17,11 +17,12 @@ import type {
   HospitalLicense,
   LicenseDraft,
   LicenseFieldErrors,
-  LicenceCategory,
+  LicenceStatus,
   RenewalUrgency,
   WizardLicenseDraft,
 } from '../../../shared/types/domain'
 import { getRenewalSignals, defaultStatusFromExpiry } from '../../licenses/utils/renewal'
+import { formatDisplayDate } from '../../../shared/utils/date'
 import { createId } from '../../../shared/utils/id'
 import { migrateLegacyRecords } from '../../licenses/utils/migrateLegacy'
 import { exportRowsToExcel } from '../../../shared/utils/exportExcel'
@@ -65,7 +66,7 @@ export function useDashboardState() {
   })
 
   const [selectedHospitalId, setSelectedHospitalId] = useState('all')
-  const [selectedCategory, setSelectedCategory] = useState<LicenceCategory | 'All'>('All')
+  const [selectedStatus, setSelectedStatus] = useState<LicenceStatus | 'All'>('All')
 
   const [banner, setBanner] = useState('')
 
@@ -236,11 +237,15 @@ export function useDashboardState() {
 
   const filteredLicenses = useMemo(() => {
     return licenses.filter((license) => {
-      const byHospital = selectedHospitalId === 'all' || license.hospitalId === selectedHospitalId
-      const byCategory = selectedCategory === 'All' || license.category === selectedCategory
-      return byHospital && byCategory
+      const isSingleHospitalRemote = hasRemoteSync && hospitals.length <= 1
+      const byHospital =
+        isSingleHospitalRemote
+          ? true
+          : selectedHospitalId === 'all' || license.hospitalId === selectedHospitalId
+      const byStatus = selectedStatus === 'All' || license.status === selectedStatus
+      return byHospital && byStatus
     })
-  }, [licenses, selectedHospitalId, selectedCategory])
+  }, [hasRemoteSync, hospitals.length, licenses, selectedHospitalId, selectedStatus])
 
   const enrichedFilteredLicenses = useMemo<EnrichedLicense[]>(() => {
     return filteredLicenses.map((license) => ({
@@ -250,37 +255,16 @@ export function useDashboardState() {
     }))
   }, [filteredLicenses, hospitalMap])
 
-  const criticalCount = enrichedFilteredLicenses.filter(
-    (license) => license.renewal.urgency === 'Critical' || license.renewal.urgency === 'Overdue',
+  const activeLicensesCount = enrichedFilteredLicenses.filter(
+    (license) => license.status === 'Active',
   ).length
-  const dueSoonCount = enrichedFilteredLicenses.filter(
-    (license) => license.renewal.reminder3Months,
+  const expiredLicensesCount = enrichedFilteredLicenses.filter(
+    (license) => license.status === 'Expired',
   ).length
-  const compliantCount = enrichedFilteredLicenses.filter(
-    (license) => license.renewal.urgency === 'Low',
+  const dueSoonLicensesCount = enrichedFilteredLicenses.filter(
+    (license) => license.status === 'Due Soon',
   ).length
   const totalHospitals = hospitals.length
-
-  const actionQueue = useMemo(() => {
-    return [...enrichedFilteredLicenses]
-      .sort((a, b) => {
-        const daysA = a.renewal.countdownDays ?? Number.MAX_SAFE_INTEGER
-        const daysB = b.renewal.countdownDays ?? Number.MAX_SAFE_INTEGER
-        return daysA - daysB
-      })
-      .slice(0, 4)
-  }, [enrichedFilteredLicenses])
-
-  const upcomingMilestones = useMemo(() => {
-    return [...enrichedFilteredLicenses]
-      .filter((license) => (license.renewal.countdownDays ?? Number.MAX_SAFE_INTEGER) >= 0)
-      .sort((a, b) => {
-        const daysA = a.renewal.countdownDays ?? Number.MAX_SAFE_INTEGER
-        const daysB = b.renewal.countdownDays ?? Number.MAX_SAFE_INTEGER
-        return daysA - daysB
-      })
-      .slice(0, 4)
-  }, [enrichedFilteredLicenses])
 
   const validateLicenseFields = (draft: Pick<LicenseDraft, 'licenceName' | 'category' | 'expiryDate'>) => {
     return {
@@ -300,7 +284,7 @@ export function useDashboardState() {
       expiryDate: '',
       owner: '',
       regulator: '',
-      status: 'Compliant',
+      status: 'Active',
     })
     setIsLicenseModalOpen(true)
   }
@@ -317,8 +301,8 @@ export function useDashboardState() {
     }
 
     const nextStatus =
-      modalDraft.status === 'In Review'
-        ? 'In Review'
+      modalDraft.status === 'Due Soon'
+        ? 'Due Soon'
         : defaultStatusFromExpiry(modalDraft.expiryDate)
 
     const nextLicense: HospitalLicense = {
@@ -350,35 +334,85 @@ export function useDashboardState() {
   }
 
   const exportFiltered = () => {
-    exportRowsToExcel({
-      rows: enrichedFilteredLicenses,
-      columns: [
-        { header: 'Hospital', value: (row) => row.hospitalName },
-        { header: 'Licence Name', value: (row) => row.licenceName },
-        { header: 'Category', value: (row) => row.category },
-        { header: 'Issue Date', value: (row) => row.issueDate || '-' },
-        { header: 'Expiry Date', value: (row) => row.expiryDate },
-        {
-          header: 'Countdown Days',
-          value: (row) =>
-            row.renewal.countdownDays === null ? '-' : `${row.renewal.countdownDays}`,
-        },
-        {
-          header: '3 Month Reminder',
-          value: (row) => (row.renewal.reminder3Months ? 'Yes' : 'No'),
-        },
-        {
-          header: '15 Day Reminder',
-          value: (row) => (row.renewal.reminder15Days ? 'Yes' : 'No'),
-        },
-        { header: 'Urgency', value: (row) => row.renewal.urgency },
-        { header: 'Owner', value: (row) => row.owner || '-' },
-        { header: 'Regulator', value: (row) => row.regulator || '-' },
-        { header: 'Status', value: (row) => row.status },
-      ],
-      filePrefix: 'legal-licence-register',
+    const actionLabelFromStatus = (status: HospitalLicense['status']) => {
+      if (status === 'Expired') {
+        return 'Renew now'
+      }
+
+      if (status === 'Due Soon') {
+        return 'Follow up'
+      }
+
+      return 'Monitor'
+    }
+
+    const registerRows = enrichedFilteredLicenses.map((license, index) => ({
+      serialNumber: index + 1,
+      ...license,
+    }))
+
+    const statusOrder: HospitalLicense['status'][] = ['Active', 'Due Soon', 'Expired']
+    const statusCounts = statusOrder.reduce<Record<HospitalLicense['status'], number>>(
+      (acc, status) => {
+        acc[status] = 0
+        return acc
+      },
+      {
+        Active: 0,
+        'Due Soon': 0,
+        Expired: 0,
+      },
+    )
+
+    for (const license of enrichedFilteredLicenses) {
+      statusCounts[license.status] += 1
+    }
+
+    const total = enrichedFilteredLicenses.length
+    const statusBreakdownRows = statusOrder.map((status) => {
+      const count = statusCounts[status]
+      const share = total > 0 ? Math.round((count / total) * 100) : 0
+
+      return {
+        Status: status,
+        Count: count,
+        Share: `${share}%`,
+      }
     })
-    setBanner('Excel file downloaded for selected hospital and filters.')
+
+    exportRowsToExcel({
+      rows: registerRows,
+      columns: [
+        { header: 'Serial Number', value: (row) => `${row.serialNumber}` },
+        { header: 'License/Vendor name', value: (row) => row.licenceName },
+        { header: 'Category', value: (row) => row.category },
+        { header: 'Licence Number', value: (row) => row.id },
+        { header: 'Valid from', value: (row) => formatDisplayDate(row.issueDate) },
+        { header: 'Valid till', value: (row) => formatDisplayDate(row.expiryDate) },
+        {
+          header: 'Remaining days',
+          value: (row) =>
+            `${row.remainingDays ?? row.renewal.countdownDays ?? '-'}`,
+        },
+        { header: 'Status', value: (row) => row.status },
+        {
+          header: 'Action',
+          value: (row) => row.action || actionLabelFromStatus(row.status),
+        },
+        {
+          header: 'Documents',
+          value: (row) => row.documents || '-',
+        },
+      ],
+      additionalSheets: [
+        {
+          name: 'Status Breakdown',
+          rows: statusBreakdownRows,
+        },
+      ],
+      filePrefix: 'Licence dashboard',
+    })
+    setBanner('Excel report downloaded with register and status breakdown.')
   }
 
   const openWizard = () => {
@@ -494,7 +528,7 @@ export function useDashboardState() {
     isSyncing,
     lastSyncedAt,
     selectedHospitalId,
-    selectedCategory,
+    selectedStatus,
     banner,
     isLicenseModalOpen,
     modalDraft,
@@ -507,14 +541,12 @@ export function useDashboardState() {
     wizardLicenseErrors,
     hospitalCounts,
     enrichedFilteredLicenses,
-    criticalCount,
-    dueSoonCount,
-    compliantCount,
+    activeLicensesCount,
+    expiredLicensesCount,
+    dueSoonLicensesCount,
     totalHospitals,
-    actionQueue,
-    upcomingMilestones,
     setSelectedHospitalId,
-    setSelectedCategory,
+    setSelectedStatus,
     setModalDraft,
     setHospitalDraft,
     setWizardStep,

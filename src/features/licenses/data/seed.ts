@@ -46,7 +46,7 @@ export const seedLicenses: HospitalLicense[] = [
     expiryDate: '2026-07-12',
     owner: 'Ritwik Das',
     regulator: 'Pollution Control Board',
-    status: 'In Review',
+    status: 'Due Soon',
   },
   {
     id: 'L-003',
@@ -57,7 +57,7 @@ export const seedLicenses: HospitalLicense[] = [
     expiryDate: '2026-05-29',
     owner: 'Neha Rao',
     regulator: 'Municipal Fire Department',
-    status: 'Overdue',
+    status: 'Expired',
   },
   {
     id: 'L-004',
@@ -68,7 +68,7 @@ export const seedLicenses: HospitalLicense[] = [
     expiryDate: '2026-08-01',
     owner: 'Asha Nair',
     regulator: 'Drug Control Office',
-    status: 'Compliant',
+    status: 'Active',
   },
 ]
 
@@ -98,5 +98,5 @@ export const makeLicenseDraft = (hospitalId = ''): WizardLicenseDraft => ({
   expiryDate: '',
   owner: '',
   regulator: '',
-  status: 'Compliant',
+  status: 'Active',
 })
