@@ -21,11 +21,15 @@
 }
 
 .navCardScrolled {
-  background: color-mix(in srgb, var(--card-bg) 78%, transparent);
-  border: 1px solid var(--card-border);
-  box-shadow: 0 14px 28px rgba(12, 39, 60, 0.12);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.08)),
+    color-mix(in srgb, var(--card-bg) 62%, transparent);
+  border: 1px solid color-mix(in srgb, var(--card-border-strong) 58%, rgba(255, 255, 255, 0.25));
+  box-shadow:
+    0 18px 36px rgba(12, 39, 60, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
   padding: 0.55rem clamp(14px, 2.4vw, 28px);
 }
 
@@ -435,7 +439,8 @@
   }
 
   .navCard {
-    align-items: start;
-    flex-direction: column;
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
   }
 }
