@@ -44,7 +44,8 @@ function asNumberOrNull(value: unknown) {
 }
 
 function normalizeStatus(value: string): HospitalLicense['status'] {
-  const normalized = value.trim().toLowerCase()
+  const raw = value.trim()
+  const normalized = raw.toLowerCase()
   if (
     normalized.includes('expired') ||
     normalized.includes('overdue') ||
@@ -64,7 +65,7 @@ function normalizeStatus(value: string): HospitalLicense['status'] {
     return 'Active'
   }
 
-  return 'Active'
+  return raw || 'Unknown'
 }
 
 function parseSyncedAt(value: unknown): number | null {

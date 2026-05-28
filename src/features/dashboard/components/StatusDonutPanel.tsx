@@ -1,39 +1,24 @@
 import type { CSSProperties } from 'react'
 import type { EnrichedLicense } from '../hooks/useDashboardState'
 import styles from './DashboardPage.module.css'
+import { buildStatusColorMap, buildStatusOrder, normalizeStatusLabel } from './statusColors'
 
 type StatusDonutPanelProps = {
   licenses: EnrichedLicense[]
 }
 
-type StatusKey = EnrichedLicense['status']
-
-const statusOrder: StatusKey[] = ['Active', 'Due Soon', 'Expired']
-
-const statusColors: Record<StatusKey, string> = {
-  Active: '#1d7a58',
-  'Due Soon': '#c17f0f',
-  Expired: '#9f3b2d',
-}
-
 export function StatusDonutPanel(props: StatusDonutPanelProps) {
   const { licenses } = props
 
-  const counts = statusOrder.reduce<Record<StatusKey, number>>(
-    (acc, status) => {
-      acc[status] = 0
-      return acc
-    },
-    {
-      Active: 0,
-      'Due Soon': 0,
-      Expired: 0,
-    },
-  )
+  const counts = new Map<string, number>()
 
   for (const license of licenses) {
-    counts[license.status] += 1
+    const status = normalizeStatusLabel(license.status)
+    counts.set(status, (counts.get(status) ?? 0) + 1)
   }
+
+  const statusOrder = buildStatusOrder(Array.from(counts.keys()))
+  const statusColorMap = buildStatusColorMap(statusOrder)
 
   const total = licenses.length
   const radius = 46
@@ -41,7 +26,7 @@ export function StatusDonutPanel(props: StatusDonutPanelProps) {
   let offset = 0
   const donutSegments = statusOrder
     .map((status) => {
-      const value = counts[status]
+      const value = counts.get(status) ?? 0
       if (!total || value === 0) {
         return null
       }
@@ -49,7 +34,7 @@ export function StatusDonutPanel(props: StatusDonutPanelProps) {
       const length = (value / total) * circumference
       const segment = {
         status,
-        color: statusColors[status],
+        color: statusColorMap[status],
         dashArray: `${length} ${circumference - length}`,
         dashOffset: -offset,
       }
@@ -94,14 +79,14 @@ export function StatusDonutPanel(props: StatusDonutPanelProps) {
 
         <ul className={styles.statusLegend}>
           {statusOrder.map((status) => {
-            const value = counts[status]
+            const value = counts.get(status) ?? 0
             const share = total > 0 ? Math.round((value / total) * 100) : 0
 
             return (
               <li key={status}>
                 <span
                   className={styles.statusDot}
-                  style={{ '--status-color': statusColors[status] } as CSSProperties}
+                  style={{ '--status-color': statusColorMap[status] } as CSSProperties}
                 />
                 <span className={styles.statusLabel}>{status}</span>
                 <strong>{value}</strong>

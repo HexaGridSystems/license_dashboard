@@ -1,0 +1,167 @@
+export const knownStatusOrder = ['Active', 'Due Soon', 'Expired', 'One Time'] as const
+
+const knownStatusColors: Record<string, string> = {
+  Active: '#1d7a58',
+  'Due Soon': '#c17f0f',
+  Expired: '#9f3b2d',
+  'One Time': '#1e88e5',
+}
+
+const customStatusPalette = [
+  '#1e88e5',
+  '#ef6c00',
+  '#00897b',
+  '#d81b60',
+  '#5e35b1',
+  '#6d4c41',
+  '#039be5',
+  '#c0ca33',
+  '#f4511e',
+  '#3949ab',
+  '#43a047',
+  '#8e24aa',
+  '#00acc1',
+  '#e53935',
+  '#7cb342',
+  '#546e7a',
+]
+
+export function normalizeStatusLabel(status: string) {
+  const raw = String(status || '').trim()
+  if (!raw) {
+    return 'Unknown'
+  }
+
+  const simplified = raw.toLowerCase().replace(/[^a-z]/g, '')
+  if (simplified === 'active') {
+    return 'Active'
+  }
+  if (simplified === 'duesoon') {
+    return 'Due Soon'
+  }
+  if (simplified === 'expired') {
+    return 'Expired'
+  }
+  if (simplified === 'onetime') {
+    return 'One Time'
+  }
+
+  return raw
+}
+
+function hueToRgb(p: number, q: number, t: number) {
+  let localT = t
+
+  if (localT < 0) {
+    localT += 1
+  }
+  if (localT > 1) {
+    localT -= 1
+  }
+  if (localT < 1 / 6) {
+    return p + (q - p) * 6 * localT
+  }
+  if (localT < 1 / 2) {
+    return q
+  }
+  if (localT < 2 / 3) {
+    return p + (q - p) * (2 / 3 - localT) * 6
+  }
+
+  return p
+}
+
+function hslToHex(hue: number, saturation: number, lightness: number) {
+  const h = ((hue % 360) + 360) % 360 / 360
+  const s = Math.max(0, Math.min(100, saturation)) / 100
+  const l = Math.max(0, Math.min(100, lightness)) / 100
+
+  let r: number
+  let g: number
+  let b: number
+
+  if (s === 0) {
+    r = l
+    g = l
+    b = l
+  } else {
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s
+    const p = 2 * l - q
+
+    r = hueToRgb(p, q, h + 1 / 3)
+    g = hueToRgb(p, q, h)
+    b = hueToRgb(p, q, h - 1 / 3)
+  }
+
+  const toHex = (value: number) => {
+    const channel = Math.round(value * 255)
+    return channel.toString(16).padStart(2, '0')
+  }
+
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`
+}
+
+function isKnown(status: string): status is (typeof knownStatusOrder)[number] {
+  return knownStatusOrder.includes(status as (typeof knownStatusOrder)[number])
+}
+
+export function buildStatusOrder(statuses: readonly string[]) {
+  const uniqueStatuses = new Set<string>()
+
+  for (const rawStatus of statuses) {
+    uniqueStatuses.add(normalizeStatusLabel(rawStatus))
+  }
+
+  return [
+    ...knownStatusOrder.filter((status) => uniqueStatuses.has(status)),
+    ...Array.from(uniqueStatuses)
+      .filter((status) => !isKnown(status))
+      .sort((left, right) => left.localeCompare(right)),
+  ]
+}
+
+export function buildStatusColorMap(statuses: readonly string[]) {
+  const orderedStatuses = buildStatusOrder(statuses)
+  const colorMap: Record<string, string> = {}
+
+  for (const status of knownStatusOrder) {
+    if (orderedStatuses.includes(status)) {
+      colorMap[status] = knownStatusColors[status]
+    }
+  }
+
+  const customStatuses = orderedStatuses.filter((status) => !isKnown(status))
+  if (customStatuses.length === 0) {
+    return colorMap
+  }
+
+  const paletteSize = customStatusPalette.length
+  const baseColorCount = Math.min(customStatuses.length, paletteSize)
+  for (let index = 0; index < baseColorCount; index += 1) {
+    const paletteIndex = Math.floor((index * paletteSize) / baseColorCount)
+    colorMap[customStatuses[index]] = customStatusPalette[paletteIndex]
+  }
+
+  for (let index = baseColorCount; index < customStatuses.length; index += 1) {
+    const overflowIndex = index - baseColorCount
+    const hue = (overflowIndex * 137.508) % 360
+    const lightness = 44 + (overflowIndex % 3) * 8
+    colorMap[customStatuses[index]] = hslToHex(hue, 68, lightness)
+  }
+
+  return colorMap
+}
+
+export function getStatusColor(status: string, statuses?: readonly string[]) {
+  const normalizedStatus = normalizeStatusLabel(status)
+  if (knownStatusColors[normalizedStatus]) {
+    return knownStatusColors[normalizedStatus]
+  }
+
+  const colorMap = buildStatusColorMap(statuses ?? [normalizedStatus])
+  return colorMap[normalizedStatus] ?? '#546e7a'
+}
+
+export function isKnownStatus(status: string) {
+  return Object.prototype.hasOwnProperty.call(knownStatusColors, normalizeStatusLabel(status))
+}

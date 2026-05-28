@@ -5,7 +5,7 @@ export type LicenceCategory =
   | 'Statutory Filing'
   | 'Legal Certificate'
 
-export type LicenceStatus = 'Due Soon' | 'Active' | 'Expired'
+export type LicenceStatus = 'Due Soon' | 'Active' | 'Expired' | string
 
 export type RenewalUrgency = 'Low' | 'Medium' | 'Critical' | 'Overdue'
 

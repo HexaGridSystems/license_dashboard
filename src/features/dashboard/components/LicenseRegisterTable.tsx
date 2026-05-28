@@ -1,6 +1,8 @@
+import type { CSSProperties } from 'react'
 import { formatDisplayDate } from '../../../shared/utils/date'
 import type { EnrichedLicense } from '../hooks/useDashboardState'
 import styles from './DashboardPage.module.css'
+import { buildStatusColorMap, isKnownStatus, normalizeStatusLabel } from './statusColors'
 
 type LicenseRegisterTableProps = {
   licenses: EnrichedLicense[]
@@ -27,6 +29,7 @@ function toDocumentLink(value: string) {
 
 export function LicenseRegisterTable(props: LicenseRegisterTableProps) {
   const { licenses } = props
+  const statusColorMap = buildStatusColorMap(licenses.map((license) => license.status))
 
   const getActionLabel = (status: EnrichedLicense['status']) => {
     if (status === 'Expired') {
@@ -65,56 +68,68 @@ export function LicenseRegisterTable(props: LicenseRegisterTableProps) {
             </tr>
           </thead>
           <tbody>
-            {licenses.map((license, index) => (
-              <tr
-                key={license.id}
-                className={
-                  license.renewal.urgency === 'Overdue' || license.renewal.urgency === 'Critical'
-                    ? styles.urgentRow
-                    : ''
-                }
-              >
-                <td data-label="Serial Number">{index + 1}</td>
-                <td data-label="License/Vendor name">{license.licenceName}</td>
-                <td data-label="Category">{license.category}</td>
-                <td data-label="Licence Number">{license.id}</td>
-                <td data-label="Valid from">{formatDisplayDate(license.issueDate)}</td>
-                <td data-label="Valid till">{formatDisplayDate(license.expiryDate)}</td>
-                <td data-label="Remaining days">
-                  {license.remainingDays ?? license.renewal.countdownDays ?? '-'}
-                </td>
-                <td data-label="Status">
-                  <span className={styles.badge} data-status={license.status}>
-                    {license.status}
-                  </span>
-                </td>
-                <td data-label="Action">{license.action || getActionLabel(license.status)}</td>
-                <td data-label="Documents">
-                  {(() => {
-                    const documentsValue = license.documents?.trim() || ''
-                    if (!documentsValue) {
-                      return '-'
-                    }
+            {licenses.map((license, index) => {
+              const statusLabel = normalizeStatusLabel(license.status)
 
-                    const href = toDocumentLink(documentsValue)
-                    if (!href) {
-                      return <span className={styles.docText}>{documentsValue}</span>
-                    }
+              return (
+                <tr
+                  key={license.id}
+                  className={
+                    license.renewal.urgency === 'Overdue' || license.renewal.urgency === 'Critical'
+                      ? styles.urgentRow
+                      : ''
+                  }
+                >
+                  <td data-label="Serial Number">{index + 1}</td>
+                  <td data-label="License/Vendor name">{license.licenceName}</td>
+                  <td data-label="Category">{license.category}</td>
+                  <td data-label="Licence Number">{license.id}</td>
+                  <td data-label="Valid from">{formatDisplayDate(license.issueDate)}</td>
+                  <td data-label="Valid till">{formatDisplayDate(license.expiryDate)}</td>
+                  <td data-label="Remaining days">
+                    {license.remainingDays ?? license.renewal.countdownDays ?? '-'}
+                  </td>
+                  <td data-label="Status">
+                    <span
+                      className={`${styles.badge} ${!isKnownStatus(statusLabel) ? styles.dynamicStatus : ''}`}
+                      data-status={statusLabel}
+                      style={
+                        !isKnownStatus(statusLabel)
+                          ? ({ '--status-color': statusColorMap[statusLabel] } as CSSProperties)
+                          : undefined
+                      }
+                    >
+                      {statusLabel}
+                    </span>
+                  </td>
+                  <td data-label="Action">{license.action || getActionLabel(license.status)}</td>
+                  <td data-label="Documents">
+                    {(() => {
+                      const documentsValue = license.documents?.trim() || ''
+                      if (!documentsValue) {
+                        return '-'
+                      }
 
-                    return (
-                      <a
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.docLink}
-                      >
-                        Click to open
-                      </a>
-                    )
-                  })()}
-                </td>
-              </tr>
-            ))}
+                      const href = toDocumentLink(documentsValue)
+                      if (!href) {
+                        return <span className={styles.docText}>{documentsValue}</span>
+                      }
+
+                      return (
+                        <a
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.docLink}
+                        >
+                          Click to open
+                        </a>
+                      )
+                    })()}
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>

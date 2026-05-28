@@ -26,6 +26,7 @@ import { formatDisplayDate } from '../../../shared/utils/date'
 import { createId } from '../../../shared/utils/id'
 import { migrateLegacyRecords } from '../../licenses/utils/migrateLegacy'
 import { exportRowsToExcel } from '../../../shared/utils/exportExcel'
+import { buildStatusColorMap, buildStatusOrder, normalizeStatusLabel } from '../components/statusColors'
 import {
   listDashboardData,
   upsertHospitalWithLicenses,
@@ -351,21 +352,18 @@ export function useDashboardState() {
       ...license,
     }))
 
-    const statusOrder: HospitalLicense['status'][] = ['Active', 'Due Soon', 'Expired']
-    const statusCounts = statusOrder.reduce<Record<HospitalLicense['status'], number>>(
-      (acc, status) => {
-        acc[status] = 0
-        return acc
-      },
-      {
-        Active: 0,
-        'Due Soon': 0,
-        Expired: 0,
-      },
+    const statusOrder = buildStatusOrder(
+      enrichedFilteredLicenses.map((license) => license.status),
     )
+    const statusColorMap = buildStatusColorMap(statusOrder)
+    const statusCounts = statusOrder.reduce<Record<string, number>>((acc, status) => {
+      acc[status] = 0
+      return acc
+    }, {})
 
     for (const license of enrichedFilteredLicenses) {
-      statusCounts[license.status] += 1
+      const status = normalizeStatusLabel(license.status)
+      statusCounts[status] = (statusCounts[status] ?? 0) + 1
     }
 
     const total = enrichedFilteredLicenses.length
@@ -377,6 +375,7 @@ export function useDashboardState() {
         Status: status,
         Count: count,
         Share: `${share}%`,
+        Color: statusColorMap[status],
       }
     })
 

@@ -496,6 +496,19 @@ td select,
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.badge[data-status] {
+  color: var(--text-main);
+  background: color-mix(in srgb, var(--surface-soft) 86%, transparent);
+  border: 1px solid var(--card-border);
+}
+
+.dynamicStatus {
+  color: var(--status-color);
+  background: color-mix(in srgb, var(--status-color) 20%, var(--surface));
+  border-color: color-mix(in srgb, var(--status-color) 46%, var(--card-border));
 }
 
 .badge[data-urgency='Low'],
@@ -515,6 +528,11 @@ td select,
 .badge[data-status='Expired'] {
   color: #9f3b2d;
   background: #fde7e2;
+}
+
+.badge[data-status='One Time'] {
+  color: #12539f;
+  background: #deeeff;
 }
 
 .docLink {
