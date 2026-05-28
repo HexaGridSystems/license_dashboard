@@ -1,6 +1,6 @@
 import { LoginPage } from '../features/auth/components/LoginPage'
 import { useAuth } from '../features/auth/hooks/useAuth'
-import { DashboardPage } from '../features/dashboard/components/DashboardPage'
+import { DashboardPage } from '../features/dashboard/components/DashboardPage.tsx'
 import { useDashboardState } from '../features/dashboard/hooks/useDashboardState'
 import { MarketingLayout } from '../features/marketing/components/MarketingLayout'
 import { AboutPage } from '../features/marketing/pages/AboutPage'

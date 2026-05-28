@@ -334,7 +334,7 @@
 }
 
 .productFrame {
-  margin-top: 1rem;
+  margin-top: 0;
   border-radius: 20px;
   border: 1px solid var(--card-border-strong);
   background: linear-gradient(
@@ -352,6 +352,42 @@
 
 .productFrame p {
   margin: 0.5rem 0 0;
+  color: var(--text-soft);
+}
+
+.productSplit {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: stretch;
+}
+
+.loginFrame {
+  border-radius: 20px;
+  border: 1px solid var(--card-border);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  padding: 1.1rem;
+  display: grid;
+  gap: 0.7rem;
+  align-content: center;
+}
+
+.loginEyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.loginFrame h3 {
+  margin: 0;
+  color: var(--text-heading);
+}
+
+.loginFrame p {
+  margin: 0;
   color: var(--text-soft);
 }
 
@@ -443,7 +479,8 @@
   }
 
   .visualGrid,
-  .grid3 {
+  .grid3,
+  .productSplit {
     grid-template-columns: repeat(1, minmax(0, 1fr));
   }
 

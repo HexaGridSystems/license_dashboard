@@ -6,42 +6,31 @@ export function ProductPage() {
     <>
       <section className={styles.section}>
         <h1 className={styles.sectionTitle}>Product</h1>
-        <p className={styles.sectionLead}>
-          Compliverse Licence Dashboard is the operating layer for hospital compliance execution.
-          It helps teams track obligations, prioritize deadlines, and close actions with clarity.
-        </p>
+        <p className={styles.sectionLead}>Explore the dashboard experience before you sign in.</p>
 
-        <div className={styles.productFrame}>
-          <h3>Designed for compliance operators</h3>
-          <p>Central register for licenses, permits, and statutory submissions.</p>
-          <p>Risk-oriented views based on expiry windows and urgency status.</p>
-          <p>Export-ready snapshots for internal governance and audit readiness.</p>
-        </div>
-
-        <div className={styles.buttonRow}>
-          <Link to="/app" className={styles.ctaButton}>
-            Open Dashboard App
-          </Link>
-          <Link to="/contact" className={styles.ghostButton}>
-            Request walkthrough
-          </Link>
-        </div>
-      </section>
-
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Why teams adopt Compliverse</h2>
-        <div className={styles.grid3}>
-          <article className={styles.infoCard}>
-            <h3>One source of truth</h3>
-            <p>Consolidate fragmented trackers into one governed process.</p>
+        <div className={styles.productSplit}>
+          <article className={styles.productFrame}>
+            <h3>Welcome to Compliverse Licence Dashboard</h3>
+            <p>Designed for compliance operators in hospital environments.</p>
+            <p>Central register for licenses, permits, and statutory submissions.</p>
+            <p>Risk-oriented views based on expiry windows and urgency status.</p>
+            <p>Export-ready snapshots for internal governance and audit readiness.</p>
           </article>
-          <article className={styles.infoCard}>
-            <h3>Faster execution</h3>
-            <p>Focus attention on what is due next instead of manually triaging records.</p>
-          </article>
-          <article className={styles.infoCard}>
-            <h3>Leadership confidence</h3>
-            <p>Make compliance posture visible through clean, operational reporting.</p>
+
+          <article className={styles.loginFrame}>
+            <p className={styles.loginEyebrow}>Login</p>
+            <h3>Access your compliance workspace</h3>
+            <p>
+              Sign in to manage records, monitor due dates, and export the latest report snapshots.
+            </p>
+            <div className={styles.buttonRow}>
+              <Link to="/app" className={styles.ctaButton}>
+                Go to Login
+              </Link>
+              <Link to="/contact" className={styles.ghostButton}>
+                Need access help?
+              </Link>
+            </div>
           </article>
         </div>
       </section>
