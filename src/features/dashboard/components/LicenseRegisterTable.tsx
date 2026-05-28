@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react'
 import { formatDisplayDate } from '../../../shared/utils/date'
 import type { EnrichedLicense } from '../hooks/useDashboardState'
 import styles from './DashboardPage.module.css'
-import { buildStatusColorMap, isKnownStatus, normalizeStatusLabel } from './statusColors'
+import { buildStatusColorMap, normalizeStatusLabel } from './statusColors'
 
 type LicenseRegisterTableProps = {
   licenses: EnrichedLicense[]
@@ -91,13 +91,9 @@ export function LicenseRegisterTable(props: LicenseRegisterTableProps) {
                   </td>
                   <td data-label="Status">
                     <span
-                      className={`${styles.badge} ${!isKnownStatus(statusLabel) ? styles.dynamicStatus : ''}`}
+                      className={`${styles.badge} ${styles.dynamicStatus}`}
                       data-status={statusLabel}
-                      style={
-                        !isKnownStatus(statusLabel)
-                          ? ({ '--status-color': statusColorMap[statusLabel] } as CSSProperties)
-                          : undefined
-                      }
+                      style={{ '--status-color': statusColorMap[statusLabel] } as CSSProperties}
                     >
                       {statusLabel}
                     </span>

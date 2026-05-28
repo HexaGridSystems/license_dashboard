@@ -21,6 +21,43 @@ export function StatusDonutPanel(props: StatusDonutPanelProps) {
   const statusColorMap = buildStatusColorMap(statusOrder)
 
   const total = licenses.length
+  const legendShareMap = new Map<string, number>()
+
+  if (total > 0) {
+    const shareParts = statusOrder.map((status, index) => {
+      const value = counts.get(status) ?? 0
+      const exactShare = (value / total) * 100
+      const floorShare = Math.floor(exactShare)
+
+      return {
+        status,
+        index,
+        floorShare,
+        remainder: exactShare - floorShare,
+      }
+    })
+
+    const flooredTotal = shareParts.reduce((acc, part) => acc + part.floorShare, 0)
+    let remaining = 100 - flooredTotal
+
+    shareParts.sort((left, right) => {
+      if (right.remainder !== left.remainder) {
+        return right.remainder - left.remainder
+      }
+
+      return left.index - right.index
+    })
+
+    for (let index = 0; index < shareParts.length; index += 1) {
+      const part = shareParts[index]
+      const boost = remaining > 0 ? 1 : 0
+      legendShareMap.set(part.status, part.floorShare + boost)
+      if (boost === 1) {
+        remaining -= 1
+      }
+    }
+  }
+
   const radius = 46
   const circumference = 2 * Math.PI * radius
   let offset = 0
@@ -80,7 +117,7 @@ export function StatusDonutPanel(props: StatusDonutPanelProps) {
         <ul className={styles.statusLegend}>
           {statusOrder.map((status) => {
             const value = counts.get(status) ?? 0
-            const share = total > 0 ? Math.round((value / total) * 100) : 0
+            const share = legendShareMap.get(status) ?? 0
 
             return (
               <li key={status}>

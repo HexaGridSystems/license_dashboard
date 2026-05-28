@@ -228,14 +228,30 @@ function readObjectsFromSheet_(sheet, canonicalHeaders, headerAliases) {
   const headers = data[0].map((h) => String(h).trim())
   const indexByCanonical = resolveHeaderIndexes_(headers, canonicalHeaders, headerAliases)
 
-  return data.slice(1).map((row) => {
+  return data.slice(1).reduce((acc, row) => {
     const obj = {}
     canonicalHeaders.forEach((header) => {
       const idx = indexByCanonical[header]
       obj[header] = idx ? normalizeCellValue_(row[idx - 1]) : ''
     })
-    return obj
-  })
+
+    if (hasAnyFilledValue_(obj, canonicalHeaders)) {
+      acc.push(obj)
+    }
+
+    return acc
+  }, [])
+}
+
+function hasAnyFilledValue_(obj, keys) {
+  for (let i = 0; i < keys.length; i += 1) {
+    const value = obj[keys[i]]
+    if (value !== null && value !== undefined && String(value).trim() !== '') {
+      return true
+    }
+  }
+
+  return false
 }
 
 function ensureSheetWithHeaders_(ss, sheetName, headers, sheetAliases, allowCreate) {

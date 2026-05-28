@@ -153,10 +153,33 @@ function normalizeLicense(value: unknown): HospitalLicense {
   }
 }
 
+function hasMeaningfulLicenseData(value: unknown, normalized: HospitalLicense) {
+  const row = value as Record<string, unknown>
+  const statusRaw = asString(row.status) || asString(row.Status)
+  const actionRaw = asString(row.action) || asString(row.Action)
+  const remainingDays = asNumberOrNull(row['Remaining days'])
+
+  return [
+    normalized.id,
+    normalized.licenceName,
+    normalized.category,
+    normalized.issueDate,
+    normalized.expiryDate,
+    normalized.documents,
+    statusRaw,
+    actionRaw,
+  ].some((field) => field !== '') || remainingDays !== null
+}
+
 function mapRowsToLicenses(rows: unknown[], fallbackHospitalId: string) {
-  return rows.map((value, index) => {
+  return rows.flatMap((value, index) => {
     const row = value as Record<string, unknown>
     const normalized = normalizeLicense(value)
+
+    if (!hasMeaningfulLicenseData(value, normalized)) {
+      return []
+    }
+
     const stableId =
       normalized.id ||
       asString(row['Licence Number']) ||
@@ -164,12 +187,14 @@ function mapRowsToLicenses(rows: unknown[], fallbackHospitalId: string) {
       asString(row['Serial Number']) ||
       `L-ROW-${index + 1}`
 
-    return {
-      ...normalized,
-      id: stableId,
-      // Licences sheet can omit Hospital ID; keep records visible under one default hospital.
-      hospitalId: normalized.hospitalId || fallbackHospitalId,
-    }
+    return [
+      {
+        ...normalized,
+        id: stableId,
+        // Licences sheet can omit Hospital ID; keep records visible under one default hospital.
+        hospitalId: normalized.hospitalId || fallbackHospitalId,
+      },
+    ]
   })
 }
 

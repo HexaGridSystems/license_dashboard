@@ -123,10 +123,13 @@ export function buildStatusOrder(statuses: readonly string[]) {
 export function buildStatusColorMap(statuses: readonly string[]) {
   const orderedStatuses = buildStatusOrder(statuses)
   const colorMap: Record<string, string> = {}
+  const usedColors = new Set<string>()
 
   for (const status of knownStatusOrder) {
     if (orderedStatuses.includes(status)) {
-      colorMap[status] = knownStatusColors[status]
+      const knownColor = knownStatusColors[status].toLowerCase()
+      colorMap[status] = knownColor
+      usedColors.add(knownColor)
     }
   }
 
@@ -136,17 +139,40 @@ export function buildStatusColorMap(statuses: readonly string[]) {
   }
 
   const paletteSize = customStatusPalette.length
-  const baseColorCount = Math.min(customStatuses.length, paletteSize)
-  for (let index = 0; index < baseColorCount; index += 1) {
-    const paletteIndex = Math.floor((index * paletteSize) / baseColorCount)
-    colorMap[customStatuses[index]] = customStatusPalette[paletteIndex]
-  }
+  for (let index = 0; index < customStatuses.length; index += 1) {
+    const status = customStatuses[index]
+    let assignedColor = ''
 
-  for (let index = baseColorCount; index < customStatuses.length; index += 1) {
-    const overflowIndex = index - baseColorCount
-    const hue = (overflowIndex * 137.508) % 360
-    const lightness = 44 + (overflowIndex % 3) * 8
-    colorMap[customStatuses[index]] = hslToHex(hue, 68, lightness)
+    if (paletteSize > 0) {
+      const preferredIndex = Math.floor((index * paletteSize) / customStatuses.length)
+      for (let offset = 0; offset < paletteSize; offset += 1) {
+        const candidate = customStatusPalette[(preferredIndex + offset) % paletteSize].toLowerCase()
+        if (!usedColors.has(candidate)) {
+          assignedColor = candidate
+          break
+        }
+      }
+    }
+
+    if (!assignedColor) {
+      let overflowOffset = 0
+      while (!assignedColor && overflowOffset < 2048) {
+        const hue = ((index + overflowOffset) * 137.508) % 360
+        const lightness = 44 + ((index + overflowOffset) % 3) * 8
+        const candidate = hslToHex(hue, 68, lightness).toLowerCase()
+        if (!usedColors.has(candidate)) {
+          assignedColor = candidate
+        }
+        overflowOffset += 1
+      }
+    }
+
+    if (!assignedColor) {
+      assignedColor = '#546e7a'
+    }
+
+    colorMap[status] = assignedColor
+    usedColors.add(assignedColor)
   }
 
   return colorMap

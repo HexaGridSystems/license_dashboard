@@ -511,28 +511,20 @@ td select,
   border-color: color-mix(in srgb, var(--status-color) 46%, var(--card-border));
 }
 
-.badge[data-urgency='Low'],
-.badge[data-status='Active'] {
+.badge[data-urgency='Low'] {
   color: #1d7a58;
   background: #dbf6ea;
 }
 
-.badge[data-urgency='Medium'],
-.badge[data-status='Due Soon'] {
+.badge[data-urgency='Medium'] {
   color: #925e00;
   background: #fff2d8;
 }
 
 .badge[data-urgency='Critical'],
-.badge[data-urgency='Overdue'],
-.badge[data-status='Expired'] {
+.badge[data-urgency='Overdue'] {
   color: #9f3b2d;
   background: #fde7e2;
-}
-
-.badge[data-status='One Time'] {
-  color: #12539f;
-  background: #deeeff;
 }
 
 .docLink {
