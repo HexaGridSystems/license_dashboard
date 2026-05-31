@@ -68,6 +68,9 @@ export function useDashboardState() {
 
   const [selectedHospitalId, setSelectedHospitalId] = useState('all')
   const [selectedStatus, setSelectedStatus] = useState<LicenceStatus | 'All'>('All')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [licenceNameQuery, setLicenceNameQuery] = useState('')
+  const [licenceNumberQuery, setLicenceNumberQuery] = useState('')
 
   const [banner, setBanner] = useState('')
 
@@ -236,17 +239,70 @@ export function useDashboardState() {
     return counts
   }, [licenses])
 
+  const statusOptions = useMemo<(LicenceStatus | 'All')[]>(() => {
+    const isSingleHospitalRemote = hasRemoteSync && hospitals.length <= 1
+    const byHospital = licenses.filter((license) =>
+      isSingleHospitalRemote
+        ? true
+        : selectedHospitalId === 'all' || license.hospitalId === selectedHospitalId,
+    )
+
+    const orderedStatuses = buildStatusOrder(byHospital.map((license) => license.status))
+    const options: (LicenceStatus | 'All')[] = ['All', ...orderedStatuses]
+
+    if (selectedStatus !== 'All' && !options.includes(selectedStatus)) {
+      options.push(selectedStatus)
+    }
+
+    return options
+  }, [hasRemoteSync, hospitals.length, licenses, selectedHospitalId, selectedStatus])
+
   const filteredLicenses = useMemo(() => {
+    const normalizedSearchQuery = searchQuery.trim().toLowerCase()
+    const normalizedLicenceNameQuery = licenceNameQuery.trim().toLowerCase()
+    const normalizedLicenceNumberQuery = licenceNumberQuery.trim().toLowerCase()
+
     return licenses.filter((license) => {
       const isSingleHospitalRemote = hasRemoteSync && hospitals.length <= 1
       const byHospital =
         isSingleHospitalRemote
           ? true
           : selectedHospitalId === 'all' || license.hospitalId === selectedHospitalId
-      const byStatus = selectedStatus === 'All' || license.status === selectedStatus
-      return byHospital && byStatus
+      const byStatus =
+        selectedStatus === 'All'
+          || normalizeStatusLabel(license.status) === normalizeStatusLabel(selectedStatus)
+
+      const searchHaystack = [
+        license.licenceName,
+        license.category,
+        license.owner,
+        license.regulator,
+        license.id,
+      ]
+        .join(' ')
+        .toLowerCase()
+
+      const bySearch =
+        !normalizedSearchQuery || searchHaystack.includes(normalizedSearchQuery)
+      const byLicenceName =
+        !normalizedLicenceNameQuery
+          || license.licenceName.toLowerCase().includes(normalizedLicenceNameQuery)
+      const byLicenceNumber =
+        !normalizedLicenceNumberQuery
+          || license.id.toLowerCase().includes(normalizedLicenceNumberQuery)
+
+      return byHospital && byStatus && bySearch && byLicenceName && byLicenceNumber
     })
-  }, [hasRemoteSync, hospitals.length, licenses, selectedHospitalId, selectedStatus])
+  }, [
+    hasRemoteSync,
+    hospitals.length,
+    licenses,
+    selectedHospitalId,
+    selectedStatus,
+    searchQuery,
+    licenceNameQuery,
+    licenceNumberQuery,
+  ])
 
   const enrichedFilteredLicenses = useMemo<EnrichedLicense[]>(() => {
     return filteredLicenses.map((license) => ({
@@ -528,6 +584,9 @@ export function useDashboardState() {
     lastSyncedAt,
     selectedHospitalId,
     selectedStatus,
+    searchQuery,
+    licenceNameQuery,
+    licenceNumberQuery,
     banner,
     isLicenseModalOpen,
     modalDraft,
@@ -539,6 +598,7 @@ export function useDashboardState() {
     wizardLicenses,
     wizardLicenseErrors,
     hospitalCounts,
+    statusOptions,
     enrichedFilteredLicenses,
     activeLicensesCount,
     expiredLicensesCount,
@@ -546,6 +606,9 @@ export function useDashboardState() {
     totalHospitals,
     setSelectedHospitalId,
     setSelectedStatus,
+    setSearchQuery,
+    setLicenceNameQuery,
+    setLicenceNumberQuery,
     setModalDraft,
     setHospitalDraft,
     setWizardStep,

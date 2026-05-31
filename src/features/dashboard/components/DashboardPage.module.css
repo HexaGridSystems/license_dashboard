@@ -253,6 +253,46 @@
   gap: 16px;
 }
 
+.filterGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.filterField {
+  display: grid;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.filterField input,
+.filterField select {
+  border: 1px solid var(--card-border-strong);
+  background: var(--surface);
+  color: var(--text-main);
+  font: inherit;
+  border-radius: 10px;
+  min-height: 38px;
+  padding: 8px 10px;
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusRow select {
+  flex: 1;
+}
+
+.filterField input:focus,
+.filterField select:focus {
+  outline: 2px solid color-mix(in srgb, var(--button-secondary-text) 28%, transparent);
+  outline-offset: 1px;
+}
+
 .segmented {
   display: flex;
   flex-wrap: wrap;
@@ -273,6 +313,16 @@
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+@media (max-width: 860px) {
+  .filterGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .statusRow {
+    flex-wrap: wrap;
+  }
 }
 
 .exportPdfButton {

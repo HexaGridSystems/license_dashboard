@@ -28,6 +28,10 @@ export function DashboardPage(props: DashboardPageProps) {
     isSyncing,
     lastSyncedAt,
     selectedStatus,
+    statusOptions,
+    searchQuery,
+    licenceNameQuery,
+    licenceNumberQuery,
     banner,
     isLicenseModalOpen,
     modalDraft,
@@ -43,6 +47,9 @@ export function DashboardPage(props: DashboardPageProps) {
     expiredLicensesCount,
     dueSoonLicensesCount,
     setSelectedStatus,
+    setSearchQuery,
+    setLicenceNameQuery,
+    setLicenceNumberQuery,
     setModalDraft,
     setHospitalDraft,
     setWizardStep,
@@ -77,6 +84,13 @@ export function DashboardPage(props: DashboardPageProps) {
     }
   }
 
+  const handleClearFilters = () => {
+    setSearchQuery('')
+    setLicenceNameQuery('')
+    setLicenceNumberQuery('')
+    setSelectedStatus('All')
+  }
+
   return (
     <div className={styles.dashboardShell}>
       <DashboardHeader
@@ -98,8 +112,16 @@ export function DashboardPage(props: DashboardPageProps) {
       />
 
       <ControlsBar
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
+        licenceNameQuery={licenceNameQuery}
+        onLicenceNameQueryChange={setLicenceNameQuery}
+        licenceNumberQuery={licenceNumberQuery}
+        onLicenceNumberQueryChange={setLicenceNumberQuery}
         selectedStatus={selectedStatus}
+        statusOptions={statusOptions}
         onSelectStatus={setSelectedStatus}
+        onClearFilters={handleClearFilters}
         onExport={exportFiltered}
         onExportPdf={handleExportPdf}
       />
