@@ -12,6 +12,7 @@ export function MarketingLayout(props: MarketingLayoutProps) {
   const { themeMode, onToggleTheme } = props
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const currentYear = new Date().getFullYear()
   const nextModeLabel = themeMode === 'light' ? 'Switch to dark mode' : 'Switch to light mode'
 
   useEffect(() => {
@@ -105,13 +106,36 @@ export function MarketingLayout(props: MarketingLayoutProps) {
       <footer className={styles.footerCard}>
         <div className={styles.footerRow}>
           <span>Compliverse</span>
-          <span>Regulatory confidence for healthcare operators</span>
+          <span>{currentYear} Compliverse. All rights reserved.</span>
         </div>
-        <div className={styles.miniBadgeRow}>
-          <span className={styles.miniBadge}>Licensing</span>
-          <span className={styles.miniBadge}>Renewals</span>
-          <span className={styles.miniBadge}>Audit Readiness</span>
-          <span className={styles.miniBadge}>Hospital Operations</span>
+        <div className={styles.footerGrid}>
+          <section className={styles.footerSection} aria-label="Address">
+            <h3 className={styles.footerTitle}>Address</h3>
+            <p className={styles.footerText}>
+              Compliverse Healthcare Compliance Solutions
+              <br />
+              Bengaluru, Karnataka, India
+            </p>
+          </section>
+
+          <section className={styles.footerSection} aria-label="Quick links">
+            <h3 className={styles.footerTitle}>Quick Links</h3>
+            <nav className={styles.footerLinks}>
+              <NavLink to="/" end className={styles.footerLink}>Home</NavLink>
+              <NavLink to="/about" className={styles.footerLink}>About</NavLink>
+              <NavLink to="/product" className={styles.footerLink}>Product</NavLink>
+              <NavLink to="/contact" className={styles.footerLink}>Contact</NavLink>
+            </nav>
+          </section>
+
+          <section className={styles.footerSection} aria-label="Contact details">
+            <h3 className={styles.footerTitle}>Contact</h3>
+            <p className={styles.footerText}>
+              <a href="mailto:hello@compliverse.com">hello@compliverse.com</a>
+              <br />
+              <a href="tel:+918045670000">+91 80 4567 0000</a>
+            </p>
+          </section>
         </div>
       </footer>
     </div>

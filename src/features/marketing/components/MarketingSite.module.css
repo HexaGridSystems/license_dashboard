@@ -40,7 +40,7 @@
 
 .brand {
   margin: 0;
-  font-size: 1rem;
+  font-size: clamp(1.15rem, 1.1rem + 0.55vw, 1.5rem);
   font-weight: 700;
   letter-spacing: -0.01em;
 }
@@ -412,33 +412,65 @@
 }
 
 .footerCard {
-  padding: 0.9rem 0.2rem 1.6rem;
-  color: var(--text-muted);
-  font-size: 0.88rem;
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--surface-soft) 85%, transparent);
+  box-shadow: var(--shadow-soft);
+  padding: 14px 16px;
+  display: grid;
+  gap: 10px;
 }
 
 .footerRow {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 0.8rem;
+  gap: 10px;
   flex-wrap: wrap;
-}
-
-.miniBadgeRow {
-  margin-top: 0.95rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-}
-
-.miniBadge {
-  border: 1px solid var(--card-border);
-  border-radius: 999px;
-  padding: 0.3rem 0.66rem;
-  font-size: 0.8rem;
   color: var(--text-soft);
-  background: rgba(255, 255, 255, 0.65);
+  font-size: 0.86rem;
+}
+
+.footerGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.footerSection {
+  display: grid;
+  gap: 8px;
+}
+
+.footerTitle {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.footerLinks {
+  display: grid;
+  gap: 6px;
+}
+
+.footerLink,
+.footerText a {
+  color: var(--button-secondary-text);
+  text-decoration: none;
+  font-size: 0.84rem;
+}
+
+.footerLink:hover,
+.footerText a:hover {
+  text-decoration: underline;
+}
+
+.footerText {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.84rem;
+  line-height: 1.5;
 }
 
 @media (max-width: 880px) {
@@ -484,9 +516,25 @@
     grid-template-columns: repeat(1, minmax(0, 1fr));
   }
 
+  .footerGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .navCard {
     align-items: center;
     flex-direction: row;
     flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 760px) {
+  .footerRow {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .footerGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
   }
 }
