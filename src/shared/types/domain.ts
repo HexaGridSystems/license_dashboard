@@ -24,6 +24,7 @@ export type HospitalLicense = {
   hospitalId: string
   licenceName: string
   category: LicenceCategory
+  licenceNumber?: string
   issueDate: string
   expiryDate: string
   owner: string

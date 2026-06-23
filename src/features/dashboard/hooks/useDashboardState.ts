@@ -46,6 +46,10 @@ export type EnrichedLicense = HospitalLicense & {
 
 const BACKGROUND_SYNC_INTERVAL_MS = 30000
 
+function getLicenseNumberValue(license: HospitalLicense) {
+  return (license.licenceNumber ?? '').trim()
+}
+
 export function useDashboardState() {
   const appScriptUrl = import.meta.env.VITE_APPS_SCRIPT_URL?.trim() ?? ''
   const hasRemoteSync = appScriptUrl.length > 0
@@ -277,6 +281,7 @@ export function useDashboardState() {
         license.category,
         license.owner,
         license.regulator,
+        license.licenceNumber,
         license.id,
       ]
         .join(' ')
@@ -289,7 +294,7 @@ export function useDashboardState() {
           || license.licenceName.toLowerCase().includes(normalizedLicenceNameQuery)
       const byLicenceNumber =
         !normalizedLicenceNumberQuery
-          || license.id.toLowerCase().includes(normalizedLicenceNumberQuery)
+          || getLicenseNumberValue(license).toLowerCase().includes(normalizedLicenceNumberQuery)
 
       return byHospital && byStatus && bySearch && byLicenceName && byLicenceNumber
     })
@@ -441,13 +446,13 @@ export function useDashboardState() {
         { header: 'Serial Number', value: (row) => `${row.serialNumber}` },
         { header: 'License/Vendor name', value: (row) => row.licenceName },
         { header: 'Category', value: (row) => row.category },
-        { header: 'Licence Number', value: (row) => row.id },
+        { header: 'Licence Number', value: (row) => getLicenseNumberValue(row) },
         { header: 'Valid from', value: (row) => formatDisplayDate(row.issueDate) },
         { header: 'Valid till', value: (row) => formatDisplayDate(row.expiryDate) },
         {
           header: 'Remaining days',
           value: (row) =>
-            `${row.remainingDays ?? row.renewal.countdownDays ?? '-'}`,
+            `${row.remainingDays ?? '-'}`,
         },
         { header: 'Status', value: (row) => row.status },
         {

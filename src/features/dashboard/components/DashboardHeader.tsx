@@ -40,10 +40,6 @@ export function DashboardHeader(props: DashboardHeaderProps) {
           </p>
         </div>
         <div className={styles.heroActions}>
-          <a href="/" className={styles.backToSite}>
-            Back to site
-            <span className={styles.linkArrow} aria-hidden="true">-&gt;</span>
-          </a>
           <div className={styles.reportPill}>Last sync: {formattedLastSync}</div>
           <button
             type="button"

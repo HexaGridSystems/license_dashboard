@@ -124,7 +124,7 @@ function normalizeLicense(value: unknown): HospitalLicense {
   }
 
   return {
-    id: pickString('id', 'Licence Number', 'License Number', 'Serial Number'),
+    id: pickString('id', 'Serial Number'),
     hospitalId: pickString('hospitalId', 'Hospital ID', 'Hospital Id'),
     licenceName: pickString(
       'licenceName',
@@ -135,6 +135,7 @@ function normalizeLicense(value: unknown): HospitalLicense {
       'License Name',
     ),
     category: pickString('category', 'Category') as HospitalLicense['category'],
+    licenceNumber: pickString('licenceNumber', 'Licence Number', 'License Number'),
     issueDate: pickString('issueDate', 'Valid from', 'Valid From', 'Issue Date'),
     expiryDate: pickString(
       'expiryDate',

@@ -70,6 +70,7 @@ export function LicenseRegisterTable(props: LicenseRegisterTableProps) {
           <tbody>
             {licenses.map((license, index) => {
               const statusLabel = normalizeStatusLabel(license.status)
+              const licenseNumber = license.licenceNumber?.trim() ?? ''
 
               return (
                 <tr
@@ -83,11 +84,11 @@ export function LicenseRegisterTable(props: LicenseRegisterTableProps) {
                   <td data-label="Serial Number">{index + 1}</td>
                   <td data-label="License/Vendor name">{license.licenceName}</td>
                   <td data-label="Category">{license.category}</td>
-                  <td data-label="Licence Number">{license.id}</td>
+                  <td data-label="Licence Number">{licenseNumber}</td>
                   <td data-label="Valid from">{formatDisplayDate(license.issueDate)}</td>
                   <td data-label="Valid till">{formatDisplayDate(license.expiryDate)}</td>
                   <td data-label="Remaining days">
-                    {license.remainingDays ?? license.renewal.countdownDays ?? '-'}
+                    {license.remainingDays ?? '-'}
                   </td>
                   <td data-label="Status">
                     <span

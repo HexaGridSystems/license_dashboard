@@ -29,10 +29,13 @@ const customStatusPalette = [
 export function normalizeStatusLabel(status: string) {
   const raw = String(status || '').trim()
   if (!raw) {
-    return 'Unknown'
+    return 'Not applicable'
   }
 
   const simplified = raw.toLowerCase().replace(/[^a-z]/g, '')
+  if (simplified === 'unknown' || simplified === 'notapplicable' || simplified === 'na') {
+    return 'Not applicable'
+  }
   if (simplified === 'active') {
     return 'Active'
   }
