@@ -26,7 +26,7 @@ import { formatDisplayDate } from '../../../shared/utils/date'
 import { createId } from '../../../shared/utils/id'
 import { migrateLegacyRecords } from '../../licenses/utils/migrateLegacy'
 import { exportRowsToExcel } from '../../../shared/utils/exportExcel'
-import { buildStatusColorMap, buildStatusOrder, normalizeStatusLabel } from '../components/statusColors'
+import { buildStatusOrder, normalizeStatusLabel } from '../components/statusColors'
 import {
   listDashboardData,
   upsertHospitalWithLicenses,
@@ -416,7 +416,6 @@ export function useDashboardState() {
     const statusOrder = buildStatusOrder(
       enrichedFilteredLicenses.map((license) => license.status),
     )
-    const statusColorMap = buildStatusColorMap(statusOrder)
     const statusCounts = statusOrder.reduce<Record<string, number>>((acc, status) => {
       acc[status] = 0
       return acc
@@ -436,7 +435,6 @@ export function useDashboardState() {
         Status: status,
         Count: count,
         Share: `${share}%`,
-        Color: statusColorMap[status],
       }
     })
 
