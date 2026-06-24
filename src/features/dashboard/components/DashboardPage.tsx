@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import type { ThemeMode } from '../../../shared/types/domain'
 import type { useDashboardState } from '../hooks/useDashboardState'
 import styles from './DashboardPage.module.css'
@@ -9,6 +9,7 @@ import { HospitalDirectory } from './HospitalDirectory'
 import { KpiCards } from './KpiCards'
 import { LicenseModal } from './LicenseModal'
 import { LicenseRegisterTable } from './LicenseRegisterTable'
+import { QuickActionsPanel } from './QuickActionsPanel'
 import { StatusDonutPanel } from './StatusDonutPanel'
 import { WizardModal } from './WizardModal'
 
@@ -91,6 +92,37 @@ export function DashboardPage(props: DashboardPageProps) {
     setSelectedStatus('All')
   }
 
+  const immediateActionQueue = useMemo(() => {
+    const urgencyRank: Record<string, number> = {
+      Overdue: 0,
+      Critical: 1,
+      Medium: 2,
+      Low: 3,
+    }
+
+    return [...enrichedFilteredLicenses]
+      .filter((license) =>
+        license.renewal.urgency === 'Overdue'
+        || license.renewal.urgency === 'Critical'
+        || license.status === 'Expired'
+        || license.status === 'Due Soon',
+      )
+      .sort((left, right) => {
+        const byUrgency =
+          (urgencyRank[left.renewal.urgency] ?? Number.MAX_SAFE_INTEGER)
+          - (urgencyRank[right.renewal.urgency] ?? Number.MAX_SAFE_INTEGER)
+
+        if (byUrgency !== 0) {
+          return byUrgency
+        }
+
+        const leftDays = left.renewal.countdownDays ?? Number.MAX_SAFE_INTEGER
+        const rightDays = right.renewal.countdownDays ?? Number.MAX_SAFE_INTEGER
+        return leftDays - rightDays
+      })
+      .slice(0, 5)
+  }, [enrichedFilteredLicenses])
+
   return (
     <div className={styles.dashboardShell}>
       <DashboardHeader
@@ -126,11 +158,22 @@ export function DashboardPage(props: DashboardPageProps) {
         onExportPdf={handleExportPdf}
       />
 
-      <section className={styles.contentGrid} ref={contentGridRef}>
-        <LicenseRegisterTable
-          licenses={enrichedFilteredLicenses}
+      <section className={styles.dashboardBody}>
+        <QuickActionsPanel
+          queueItems={immediateActionQueue}
+          totalLicenses={enrichedFilteredLicenses.length}
+          expiredLicensesCount={expiredLicensesCount}
+          dueSoonLicensesCount={dueSoonLicensesCount}
+          onExportReport={exportFiltered}
+          onExportPdf={handleExportPdf}
         />
-        <StatusDonutPanel licenses={enrichedFilteredLicenses} />
+
+        <section className={styles.contentGrid} ref={contentGridRef}>
+          <LicenseRegisterTable
+            licenses={enrichedFilteredLicenses}
+          />
+          <StatusDonutPanel licenses={enrichedFilteredLicenses} />
+        </section>
       </section>
 
       {isLicenseModalOpen ? (

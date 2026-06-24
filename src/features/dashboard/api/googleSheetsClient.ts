@@ -1,4 +1,5 @@
 import type { Hospital, HospitalLicense } from '../../../shared/types/domain'
+import { RenewalRules } from '../../licenses/domain/rules/RenewalRules'
 
 type ListResponse = {
   hospitals: Hospital[]
@@ -11,6 +12,8 @@ type ApiEnvelope = {
   error?: string
   syncedAt?: unknown
 }
+
+const renewalRules = new RenewalRules()
 
 function buildUrl(baseUrl: string, action: string) {
   const separator = baseUrl.includes('?') ? '&' : '?'
@@ -41,31 +44,6 @@ function asNumberOrNull(value: unknown) {
 
   const parsed = Number(String(value).trim())
   return Number.isFinite(parsed) ? parsed : null
-}
-
-function normalizeStatus(value: string): HospitalLicense['status'] {
-  const raw = value.trim()
-  const normalized = raw.toLowerCase()
-  if (
-    normalized.includes('expired') ||
-    normalized.includes('overdue') ||
-    normalized === 'inactive'
-  ) {
-    return 'Expired'
-  }
-  if (normalized.includes('due') || normalized.includes('review')) {
-    return 'Due Soon'
-  }
-
-  if (
-    normalized.includes('active') ||
-    normalized.includes('valid') ||
-    normalized.includes('compliant')
-  ) {
-    return 'Active'
-  }
-
-  return raw || 'Unknown'
 }
 
 function parseSyncedAt(value: unknown): number | null {
@@ -147,7 +125,7 @@ function normalizeLicense(value: unknown): HospitalLicense {
     ),
     owner: '',
     regulator: '',
-    status: normalizeStatus(pickString('status', 'Status')),
+    status: renewalRules.parseStatus(pickString('status', 'Status')),
     remainingDays: asNumberOrNull(row['Remaining days']),
     action: pickString('action', 'Action'),
     documents: pickString('documents', 'Documents', 'Document', 'Docs'),

@@ -26,30 +26,12 @@ const customStatusPalette = [
   '#546e7a',
 ]
 
+import { RenewalRules } from '../../licenses/domain/rules/RenewalRules'
+
+const renewalRules = new RenewalRules()
+
 export function normalizeStatusLabel(status: string) {
-  const raw = String(status || '').trim()
-  if (!raw) {
-    return 'Not applicable'
-  }
-
-  const simplified = raw.toLowerCase().replace(/[^a-z]/g, '')
-  if (simplified === 'unknown' || simplified === 'notapplicable' || simplified === 'na') {
-    return 'Not applicable'
-  }
-  if (simplified === 'active') {
-    return 'Active'
-  }
-  if (simplified === 'duesoon') {
-    return 'Due Soon'
-  }
-  if (simplified === 'expired') {
-    return 'Expired'
-  }
-  if (simplified === 'onetime') {
-    return 'One Time'
-  }
-
-  return raw
+  return renewalRules.normalizeStatusLabel(status)
 }
 
 function hueToRgb(p: number, q: number, t: number) {

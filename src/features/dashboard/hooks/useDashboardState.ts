@@ -21,7 +21,7 @@ import type {
   RenewalUrgency,
   WizardLicenseDraft,
 } from '../../../shared/types/domain'
-import { getRenewalSignals, defaultStatusFromExpiry } from '../../licenses/utils/renewal'
+import { getRenewalSignals } from '../../licenses/utils/renewal'
 import { formatDisplayDate } from '../../../shared/utils/date'
 import { createId } from '../../../shared/utils/id'
 import { migrateLegacyRecords } from '../../licenses/utils/migrateLegacy'
@@ -32,6 +32,10 @@ import {
   upsertHospitalWithLicenses,
   upsertLicense,
 } from '../api/googleSheetsClient'
+import { LocalStorageAdapter } from '../../../shared/services/storage'
+import { EnvConfigService } from '../../../shared/services/config'
+import { LicenseValidator } from '../../licenses/domain/validation/LicenseValidator'
+import { RenewalRules } from '../../licenses/domain/rules/RenewalRules'
 
 export type EnrichedLicense = HospitalLicense & {
   hospitalName: string
@@ -46,12 +50,17 @@ export type EnrichedLicense = HospitalLicense & {
 
 const BACKGROUND_SYNC_INTERVAL_MS = 30000
 
+const storageService = new LocalStorageAdapter()
+const configService = new EnvConfigService()
+const licenseValidator = new LicenseValidator()
+const renewalRules = new RenewalRules()
+
 function getLicenseNumberValue(license: HospitalLicense) {
   return (license.licenceNumber ?? '').trim()
 }
 
 export function useDashboardState() {
-  const appScriptUrl = import.meta.env.VITE_APPS_SCRIPT_URL?.trim() ?? ''
+  const appScriptUrl = configService.getAppsScriptUrl()
   const hasRemoteSync = appScriptUrl.length > 0
 
   const [hospitals, setHospitals] = useState<Hospital[]>(() =>
@@ -62,11 +71,7 @@ export function useDashboardState() {
   )
   const [isSyncing, setIsSyncing] = useState(false)
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(() => {
-    if (typeof window === 'undefined') {
-      return null
-    }
-
-    const saved = Number(localStorage.getItem(LAST_SYNC_STORAGE_KEY))
+    const saved = Number(storageService.getItem(LAST_SYNC_STORAGE_KEY))
     return Number.isFinite(saved) ? saved : null
   })
 
@@ -99,8 +104,8 @@ export function useDashboardState() {
       return
     }
 
-    localStorage.removeItem(DASHBOARD_STORAGE_KEY)
-    localStorage.removeItem(LEGACY_RECORD_STORAGE_KEY)
+    storageService.removeItem(DASHBOARD_STORAGE_KEY)
+    storageService.removeItem(LEGACY_RECORD_STORAGE_KEY)
   }, [hasRemoteSync])
 
   useEffect(() => {
@@ -108,7 +113,7 @@ export function useDashboardState() {
       return
     }
 
-    const saved = localStorage.getItem(DASHBOARD_STORAGE_KEY)
+    const saved = storageService.getItem(DASHBOARD_STORAGE_KEY)
     if (saved) {
       try {
         const parsed = JSON.parse(saved) as {
@@ -125,7 +130,7 @@ export function useDashboardState() {
       }
     }
 
-    const migrated = migrateLegacyRecords(localStorage.getItem(LEGACY_RECORD_STORAGE_KEY))
+    const migrated = migrateLegacyRecords(storageService.getItem(LEGACY_RECORD_STORAGE_KEY))
     if (migrated) {
       setHospitals(migrated.hospitals)
       setLicenses(migrated.licenses)
@@ -133,13 +138,13 @@ export function useDashboardState() {
   }, [hasRemoteSync])
 
   useEffect(() => {
-    localStorage.setItem(DASHBOARD_STORAGE_KEY, JSON.stringify({ hospitals, licenses }))
+    storageService.setItem(DASHBOARD_STORAGE_KEY, JSON.stringify({ hospitals, licenses }))
   }, [hospitals, licenses])
 
   const markSyncSuccess = (syncedAt: number | null = null) => {
     const timestamp = syncedAt ?? Date.now()
     setLastSyncedAt(timestamp)
-    localStorage.setItem(LAST_SYNC_STORAGE_KEY, `${timestamp}`)
+    storageService.setItem(LAST_SYNC_STORAGE_KEY, `${timestamp}`)
   }
 
   const syncFromGoogleSheets = useCallback(
@@ -328,14 +333,6 @@ export function useDashboardState() {
   ).length
   const totalHospitals = hospitals.length
 
-  const validateLicenseFields = (draft: Pick<LicenseDraft, 'licenceName' | 'category' | 'expiryDate'>) => {
-    return {
-      licenceName: draft.licenceName.trim() ? '' : 'Licence name is required.',
-      category: draft.category ? '' : 'Category is required.',
-      expiryDate: draft.expiryDate.trim() ? '' : 'Expiry date is required.',
-    }
-  }
-
   const openCreateLicenseModal = () => {
     setModalErrors(emptyLicenseErrors)
     setModalDraft({
@@ -356,7 +353,7 @@ export function useDashboardState() {
       return
     }
 
-    const errors = validateLicenseFields(modalDraft)
+    const errors = licenseValidator.validate(modalDraft)
     setModalErrors(errors)
     if (errors.licenceName || errors.category || errors.expiryDate) {
       return
@@ -365,7 +362,7 @@ export function useDashboardState() {
     const nextStatus =
       modalDraft.status === 'Due Soon'
         ? 'Due Soon'
-        : defaultStatusFromExpiry(modalDraft.expiryDate)
+        : renewalRules.getStatusFromExpiry(modalDraft.expiryDate)
 
     const nextLicense: HospitalLicense = {
       ...modalDraft,
@@ -525,7 +522,7 @@ export function useDashboardState() {
 
     const nextErrors: Record<string, LicenseFieldErrors> = {}
     wizardLicenses.forEach((draft) => {
-      nextErrors[draft.tempId] = validateLicenseFields(draft)
+      nextErrors[draft.tempId] = licenseValidator.validate(draft)
     })
     setWizardLicenseErrors(nextErrors)
 
@@ -554,7 +551,7 @@ export function useDashboardState() {
       expiryDate: draft.expiryDate,
       owner: draft.owner,
       regulator: draft.regulator,
-      status: defaultStatusFromExpiry(draft.expiryDate),
+      status: renewalRules.getStatusFromExpiry(draft.expiryDate),
     }))
 
     if (appScriptUrl) {

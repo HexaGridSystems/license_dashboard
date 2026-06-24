@@ -345,6 +345,107 @@
   min-width: 0;
 }
 
+.dashboardBody {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+  min-width: 0;
+}
+
+.quickActionsPanel {
+  padding: 14px;
+  position: sticky;
+  top: 14px;
+  display: grid;
+  gap: 14px;
+}
+
+.quickActionsHeader h3 {
+  margin: 0;
+  font-size: 1.02rem;
+}
+
+.quickActionsHeader p {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.quickActionsButtons {
+  display: grid;
+  gap: 8px;
+}
+
+.quickQueueList {
+  max-height: 340px;
+  overflow: auto;
+}
+
+.quickQueueList li {
+  background: var(--surface);
+}
+
+.quickPrimaryButton,
+.quickSecondaryButton,
+.quickGhostButton {
+  border-radius: 10px;
+  font: inherit;
+  min-height: 36px;
+  padding: 8px 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.quickPrimaryButton {
+  border: 1px solid #0e5f8b;
+  background: linear-gradient(135deg, #0e5f8b, #16769d);
+  color: #fff;
+}
+
+.quickSecondaryButton {
+  border: 1px solid color-mix(in srgb, #0e5f8b 54%, var(--card-border-strong));
+  background: color-mix(in srgb, var(--button-secondary-bg) 72%, var(--surface));
+  color: var(--button-secondary-text);
+}
+
+.quickGhostButton {
+  border: 1px solid var(--card-border-strong);
+  background: var(--surface);
+  color: var(--text-main);
+}
+
+.quickGhostButton:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
+.quickStatsList {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.quickStatsList div {
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 8px;
+  background: color-mix(in srgb, var(--surface-soft) 65%, transparent);
+}
+
+.quickStatsList dt {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+}
+
+.quickStatsList dd {
+  margin: 6px 0 0;
+  font-weight: 700;
+  font-size: 1.06rem;
+}
+
 .statusPanel {
   padding: 14px;
   width: min(260px, 100%);
@@ -716,6 +817,24 @@ td select,
 }
 
 @media (max-width: 1080px) {
+  .dashboardBody {
+    grid-template-columns: 1fr;
+  }
+
+  .quickActionsPanel {
+    position: static;
+  }
+
+  .quickActionsButtons {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .quickPrimaryButton,
+  .quickSecondaryButton,
+  .quickGhostButton {
+    text-align: center;
+  }
+
   .contentGrid {
     grid-template-columns: 1fr;
   }
@@ -747,12 +866,22 @@ td select,
 }
 
 @media screen and (max-width: 760px) {
+  .dashboardShell {
+    gap: 12px;
+  }
+
   .heroPanel,
   .register,
   .stackedPanels .card,
   .controls,
-  .stat {
+  .stat,
+  .quickActionsPanel {
     padding: 14px;
+  }
+
+  .quickActionsButtons,
+  .quickStatsList {
+    grid-template-columns: 1fr;
   }
 
   .sectionHead {
@@ -796,69 +925,96 @@ td select,
   }
 
   .statusPanel {
-    order: -1;
+    order: 0;
   }
 
   .tableWrap {
-    max-height: none;
-    overflow: visible;
+    max-height: 540px;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
   }
 
   table {
-    min-width: 0;
+    min-width: 900px;
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 10px;
+    border-collapse: collapse;
+    border-spacing: 0;
   }
 
   thead {
-    display: none;
+    display: table-header-group;
   }
 
   tbody {
-    display: grid;
-    gap: 10px;
+    display: table-row-group;
   }
 
   tbody tr {
-    display: grid;
-    gap: 8px;
-    border: 1px solid var(--card-border);
-    border-radius: 12px;
-    background: var(--surface);
-    padding: 10px;
-  }
-
-  tbody tr:nth-child(odd),
-  tbody tr:hover {
-    background: var(--surface);
+    display: table-row;
   }
 
   td {
-    display: grid;
-    grid-template-columns: minmax(120px, 42%) minmax(0, 1fr);
-    gap: 10px;
-    border-bottom: 0;
-    padding: 0;
-    font-size: 0.82rem;
-    align-items: start;
+    display: table-cell;
+    text-align: left;
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--card-border);
+    font-size: 0.84rem;
+    align-items: center;
   }
 
   td::before {
-    content: attr(data-label);
-    color: var(--text-muted);
-    font-size: 0.76rem;
-    font-weight: 600;
+    content: none;
   }
 }
 
-@media screen and (max-width: 560px) {
-  td {
+@media screen and (max-width: 620px) {
+  .statsGrid,
+  .segmented,
+  .actionBar {
     grid-template-columns: 1fr;
-    gap: 4px;
   }
 
-  td::before {
-    font-size: 0.72rem;
+  .quickStatsList {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .tableWrap {
+    max-height: 500px;
+  }
+
+  table {
+    min-width: 860px;
+  }
+
+  th,
+  td {
+    padding: 9px 7px;
+    font-size: 0.8rem;
+  }
+}
+
+@media screen and (max-width: 460px) {
+  .heroPanel,
+  .register,
+  .stackedPanels .card,
+  .controls,
+  .stat,
+  .quickActionsPanel {
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .quickStatsList {
+    grid-template-columns: 1fr;
+  }
+
+  .heroSubtitle,
+  .sectionHelp {
+    font-size: 0.78rem;
+  }
+
+  table {
+    min-width: 820px;
   }
 }

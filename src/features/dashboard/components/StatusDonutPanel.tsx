@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react'
 import type { EnrichedLicense } from '../hooks/useDashboardState'
 import styles from './DashboardPage.module.css'
-import { buildStatusColorMap, buildStatusOrder, normalizeStatusLabel } from './statusColors'
+import { getStatusColor } from './statusColors'
 
 type StatusDonutPanelProps = {
   licenses: EnrichedLicense[]
@@ -13,12 +13,18 @@ export function StatusDonutPanel(props: StatusDonutPanelProps) {
   const counts = new Map<string, number>()
 
   for (const license of licenses) {
-    const status = normalizeStatusLabel(license.status)
+    const status = license.status.trim() || 'Not applicable'
     counts.set(status, (counts.get(status) ?? 0) + 1)
   }
 
-  const statusOrder = buildStatusOrder(Array.from(counts.keys()))
-  const statusColorMap = buildStatusColorMap(statusOrder)
+  const knownStatusOrder = ['Active', 'Due Soon', 'Expired', 'One Time'] as const
+  const presentStatuses = Array.from(counts.keys())
+  const statusOrder = [
+    ...knownStatusOrder.filter((status) => counts.has(status)),
+    ...presentStatuses
+      .filter((status) => !knownStatusOrder.includes(status as (typeof knownStatusOrder)[number]))
+      .sort((left, right) => left.localeCompare(right)),
+  ]
 
   const total = licenses.length
   const legendShareMap = new Map<string, number>()
@@ -71,7 +77,7 @@ export function StatusDonutPanel(props: StatusDonutPanelProps) {
       const length = (value / total) * circumference
       const segment = {
         status,
-        color: statusColorMap[status],
+        color: getStatusColor(status, statusOrder),
         dashArray: `${length} ${circumference - length}`,
         dashOffset: -offset,
       }
@@ -123,7 +129,7 @@ export function StatusDonutPanel(props: StatusDonutPanelProps) {
               <li key={status}>
                 <span
                   className={styles.statusDot}
-                  style={{ '--status-color': statusColorMap[status] } as CSSProperties}
+                  style={{ '--status-color': getStatusColor(status, statusOrder) } as CSSProperties}
                 />
                 <span className={styles.statusLabel}>{status}</span>
                 <strong>{value}</strong>
