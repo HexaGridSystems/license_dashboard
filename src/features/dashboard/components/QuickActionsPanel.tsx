@@ -5,22 +5,10 @@ import { cx } from './utils'
 
 type QuickActionsPanelProps = {
   queueItems: EnrichedLicense[]
-  totalLicenses: number
-  expiredLicensesCount: number
-  dueSoonLicensesCount: number
-  onExportReport: () => void
-  onExportPdf: () => void
 }
 
 export function QuickActionsPanel(props: QuickActionsPanelProps) {
-  const {
-    queueItems,
-    totalLicenses,
-    expiredLicensesCount,
-    dueSoonLicensesCount,
-    onExportReport,
-    onExportPdf,
-  } = props
+  const { queueItems } = props
 
   return (
     <aside className={cx(styles.card, styles.quickActionsPanel)} aria-label="Immediate action queue">
@@ -49,31 +37,6 @@ export function QuickActionsPanel(props: QuickActionsPanelProps) {
           </li>
         )}
       </ul>
-
-      <p className={styles.sectionHelp}>Queue actions</p>
-      <div className={styles.quickActionsButtons}>
-        <button type="button" className={styles.quickGhostButton} onClick={onExportPdf}>
-          Export PDF
-        </button>
-        <button type="button" className={styles.quickGhostButton} onClick={onExportReport}>
-          Export report
-        </button>
-      </div>
-
-      <dl className={styles.quickStatsList}>
-        <div>
-          <dt>Total</dt>
-          <dd>{totalLicenses}</dd>
-        </div>
-        <div>
-          <dt>Due soon</dt>
-          <dd>{dueSoonLicensesCount}</dd>
-        </div>
-        <div>
-          <dt>Expired</dt>
-          <dd>{expiredLicensesCount}</dd>
-        </div>
-      </dl>
     </aside>
   )
 }

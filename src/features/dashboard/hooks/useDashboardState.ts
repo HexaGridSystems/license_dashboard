@@ -78,8 +78,6 @@ export function useDashboardState() {
   const [selectedHospitalId, setSelectedHospitalId] = useState('all')
   const [selectedStatus, setSelectedStatus] = useState<LicenceStatus | 'All'>('All')
   const [searchQuery, setSearchQuery] = useState('')
-  const [licenceNameQuery, setLicenceNameQuery] = useState('')
-  const [licenceNumberQuery, setLicenceNumberQuery] = useState('')
 
   const [banner, setBanner] = useState('')
 
@@ -235,6 +233,12 @@ export function useDashboardState() {
     return () => window.clearTimeout(timeout)
   }, [banner])
 
+  const isInitialLoadPending =
+    hasRemoteSync
+    && isSyncing
+    && hospitals.length === 0
+    && licenses.length === 0
+
   const hospitalMap = useMemo(() => {
     return new Map(hospitals.map((hospital) => [hospital.id, hospital]))
   }, [hospitals])
@@ -268,8 +272,6 @@ export function useDashboardState() {
 
   const filteredLicenses = useMemo(() => {
     const normalizedSearchQuery = searchQuery.trim().toLowerCase()
-    const normalizedLicenceNameQuery = licenceNameQuery.trim().toLowerCase()
-    const normalizedLicenceNumberQuery = licenceNumberQuery.trim().toLowerCase()
 
     return licenses.filter((license) => {
       const isSingleHospitalRemote = hasRemoteSync && hospitals.length <= 1
@@ -294,14 +296,8 @@ export function useDashboardState() {
 
       const bySearch =
         !normalizedSearchQuery || searchHaystack.includes(normalizedSearchQuery)
-      const byLicenceName =
-        !normalizedLicenceNameQuery
-          || license.licenceName.toLowerCase().includes(normalizedLicenceNameQuery)
-      const byLicenceNumber =
-        !normalizedLicenceNumberQuery
-          || getLicenseNumberValue(license).toLowerCase().includes(normalizedLicenceNumberQuery)
 
-      return byHospital && byStatus && bySearch && byLicenceName && byLicenceNumber
+      return byHospital && byStatus && bySearch
     })
   }, [
     hasRemoteSync,
@@ -310,8 +306,6 @@ export function useDashboardState() {
     selectedHospitalId,
     selectedStatus,
     searchQuery,
-    licenceNameQuery,
-    licenceNumberQuery,
   ])
 
   const enrichedFilteredLicenses = useMemo<EnrichedLicense[]>(() => {
@@ -580,13 +574,12 @@ export function useDashboardState() {
   return {
     hospitals,
     licenses,
+    isInitialLoadPending,
     isSyncing,
     lastSyncedAt,
     selectedHospitalId,
     selectedStatus,
     searchQuery,
-    licenceNameQuery,
-    licenceNumberQuery,
     banner,
     isLicenseModalOpen,
     modalDraft,
@@ -607,8 +600,6 @@ export function useDashboardState() {
     setSelectedHospitalId,
     setSelectedStatus,
     setSearchQuery,
-    setLicenceNameQuery,
-    setLicenceNumberQuery,
     setModalDraft,
     setHospitalDraft,
     setWizardStep,

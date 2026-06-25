@@ -31,7 +31,7 @@ export function KpiCards(props: KpiCardsProps) {
         <h2>{expiredLicensesCount}</h2>
       </article>
       <article className={cx(styles.card, styles.stat)}>
-        <p>Due soon</p>
+        <p>Expiring soon</p>
         <h2>{dueSoonLicensesCount}</h2>
       </article>
     </section>

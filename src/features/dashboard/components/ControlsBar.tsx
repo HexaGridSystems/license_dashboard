@@ -13,8 +13,6 @@ type ControlsBarProps = {
   statusOptions: (LicenceStatus | 'All')[]
   onSelectStatus: (status: LicenceStatus | 'All') => void
   onClearFilters: () => void
-  onExport: () => void
-  onExportPdf: () => void
 }
 
 export function ControlsBar(props: ControlsBarProps) {
@@ -29,14 +27,12 @@ export function ControlsBar(props: ControlsBarProps) {
     statusOptions,
     onSelectStatus,
     onClearFilters,
-    onExport,
-    onExportPdf,
   } = props
 
   return (
     <section className={cx(styles.controls, styles.card)}>
       <p className={styles.sectionHelp}>
-        Filter the register by search text, licence name, and status before export.
+        Filter the register by search text, licence name, and status.
       </p>
       <div className={styles.filterGrid}>
         <label className={styles.filterField}>
@@ -91,23 +87,6 @@ export function ControlsBar(props: ControlsBarProps) {
             </button>
           </div>
         </div>
-      </div>
-
-      <div className={styles.actionBar}>
-        <button
-          type="button"
-          className={cx(styles.ghost, styles.exportPdfButton)}
-          onClick={onExportPdf}
-        >
-          Export PDF
-        </button>
-        <button
-          type="button"
-          className={cx(styles.ghost, styles.exportReportButton)}
-          onClick={onExport}
-        >
-          Export Report
-        </button>
       </div>
     </section>
   )

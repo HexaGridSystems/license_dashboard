@@ -138,3 +138,33 @@ Required headers:
 2. Execute as: `Me`
 3. Who has access: `Anyone` (or your preferred scope)
 4. Copy `/exec` URL into `VITE_APPS_SCRIPT_URL`
+
+## Daily email automation (Resend + GitHub Actions)
+
+This repo includes a serverless endpoint at `/api/send-daily-summary` that:
+
+- Pulls dashboard rows from your Apps Script URL
+- Builds a daily renewal summary
+- Sends summary email(s) through Resend
+
+The scheduler is GitHub Actions (`.github/workflows/daily-email-trigger.yml`).
+
+### 1. Add GitHub repository secrets
+
+- `DAILY_EMAIL_TRIGGER_URL`: your production endpoint URL, for example `https://<your-site>.azurestaticapps.net/api/send-daily-summary`
+- `DAILY_EMAIL_CRON_SECRET`: a long random secret used to authenticate scheduler calls
+
+### 2. Add Azure Static Web App application settings
+
+In Azure Portal -> Static Web App -> Environment variables, add:
+
+- `CRON_SECRET` (must match `DAILY_EMAIL_CRON_SECRET`)
+- `RESEND_API_KEY`
+- `APPS_SCRIPT_URL` (your Apps Script `/exec` URL)
+- `EMAIL_FROM` (verified Resend sender)
+- `EMAIL_TO` (comma-separated recipients)
+
+### 3. Important security note
+
+- Never commit or hardcode your Resend API key.
+- Keep secrets only in GitHub Secrets and Azure app settings.
