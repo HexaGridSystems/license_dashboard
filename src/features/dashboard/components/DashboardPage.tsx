@@ -3,9 +3,7 @@ import type { ThemeMode } from '../../../shared/types/domain'
 import type { useDashboardState } from '../hooks/useDashboardState'
 import styles from './DashboardPage.module.css'
 import { exportElementToPdf } from '../../../shared/utils/exportPdf'
-import { ControlsBar } from './ControlsBar'
 import { DashboardHeader } from './DashboardHeader'
-import { HospitalDirectory } from './HospitalDirectory'
 import { KpiCards } from './KpiCards'
 import { LicenseModal } from './LicenseModal'
 import { LicenseRegisterTable } from './LicenseRegisterTable'
@@ -26,13 +24,12 @@ export function DashboardPage(props: DashboardPageProps) {
 
   const {
     hospitals,
+    isInitialLoadPending,
     isSyncing,
     lastSyncedAt,
     selectedStatus,
     statusOptions,
     searchQuery,
-    licenceNameQuery,
-    licenceNumberQuery,
     banner,
     isLicenseModalOpen,
     modalDraft,
@@ -49,8 +46,6 @@ export function DashboardPage(props: DashboardPageProps) {
     dueSoonLicensesCount,
     setSelectedStatus,
     setSearchQuery,
-    setLicenceNameQuery,
-    setLicenceNumberQuery,
     setModalDraft,
     setHospitalDraft,
     setWizardStep,
@@ -87,8 +82,6 @@ export function DashboardPage(props: DashboardPageProps) {
 
   const handleClearFilters = () => {
     setSearchQuery('')
-    setLicenceNameQuery('')
-    setLicenceNumberQuery('')
     setSelectedStatus('All')
   }
 
@@ -123,6 +116,8 @@ export function DashboardPage(props: DashboardPageProps) {
       .slice(0, 5)
   }, [enrichedFilteredLicenses])
 
+  const showInitialLoadingState = isInitialLoadPending
+
   return (
     <div className={styles.dashboardShell}>
       <DashboardHeader
@@ -134,47 +129,96 @@ export function DashboardPage(props: DashboardPageProps) {
 
       {banner ? <p className={styles.statusBanner}>{banner}</p> : null}
 
-      <HospitalDirectory />
-
-      <KpiCards
-        totalLicenses={enrichedFilteredLicenses.length}
-        activeLicensesCount={activeLicensesCount}
-        expiredLicensesCount={expiredLicensesCount}
-        dueSoonLicensesCount={dueSoonLicensesCount}
-      />
-
-      <ControlsBar
-        searchQuery={searchQuery}
-        onSearchQueryChange={setSearchQuery}
-        licenceNameQuery={licenceNameQuery}
-        onLicenceNameQueryChange={setLicenceNameQuery}
-        licenceNumberQuery={licenceNumberQuery}
-        onLicenceNumberQueryChange={setLicenceNumberQuery}
-        selectedStatus={selectedStatus}
-        statusOptions={statusOptions}
-        onSelectStatus={setSelectedStatus}
-        onClearFilters={handleClearFilters}
-        onExport={exportFiltered}
-        onExportPdf={handleExportPdf}
-      />
-
-      <section className={styles.dashboardBody}>
-        <QuickActionsPanel
-          queueItems={immediateActionQueue}
-          totalLicenses={enrichedFilteredLicenses.length}
-          expiredLicensesCount={expiredLicensesCount}
-          dueSoonLicensesCount={dueSoonLicensesCount}
-          onExportReport={exportFiltered}
-          onExportPdf={handleExportPdf}
-        />
-
-        <section className={styles.contentGrid} ref={contentGridRef}>
-          <LicenseRegisterTable
-            licenses={enrichedFilteredLicenses}
-          />
-          <StatusDonutPanel licenses={enrichedFilteredLicenses} />
+      {showInitialLoadingState ? (
+        <section className={`${styles.card} ${styles.loadingPanel}`} aria-live="polite" aria-busy="true">
+          <div className={styles.loadingCopy}>
+            <p className={styles.loadingEyebrow}>Sync in progress</p>
+            <h2>Fetching the latest licence data from Google Sheets.</h2>
+            <p>
+              This usually takes a few seconds. The dashboard will populate automatically as soon as the sync completes.
+            </p>
+          </div>
+          <div className={styles.loadingPulseRow} aria-hidden="true">
+            <span className={styles.loadingDot} />
+            <span className={styles.loadingDot} />
+            <span className={styles.loadingDot} />
+          </div>
         </section>
-      </section>
+      ) : null}
+
+      {showInitialLoadingState ? (
+        <>
+          <section className={`${styles.card} ${styles.loadingHeroCard}`} aria-hidden="true">
+            <div className={styles.loadingBarShort} />
+            <div className={styles.loadingBarLong} />
+          </section>
+
+          <section className={styles.statsGrid} aria-hidden="true">
+            {[0, 1, 2, 3].map((item) => (
+              <article key={item} className={`${styles.card} ${styles.stat} ${styles.loadingStatCard}`}>
+                <div className={styles.loadingLabel} />
+                <div className={styles.loadingValue} />
+                <div className={styles.loadingMeta} />
+              </article>
+            ))}
+          </section>
+
+          <section className={styles.dashboardBody} aria-hidden="true">
+            <div className={styles.sideColumn}>
+              <section className={`${styles.card} ${styles.loadingSidePanel}`}>
+                <div className={styles.loadingPanelTitle} />
+                <div className={styles.loadingListItem} />
+                <div className={styles.loadingListItem} />
+                <div className={styles.loadingListItemShort} />
+              </section>
+
+              <article className={`${styles.card} ${styles.loadingChartCard}`}>
+                <div className={styles.loadingPanelTitle} />
+                <div className={styles.loadingChart} />
+                <div className={styles.loadingLegendRow} />
+                <div className={styles.loadingLegendRow} />
+                <div className={styles.loadingLegendRowShort} />
+              </article>
+            </div>
+
+            <article className={`${styles.card} ${styles.loadingTableCard}`}>
+              <div className={styles.loadingPanelTitle} />
+              <div className={styles.loadingTableHeader} />
+              {[0, 1, 2, 3, 4].map((item) => (
+                <div key={item} className={styles.loadingTableRow} />
+              ))}
+            </article>
+          </section>
+        </>
+      ) : (
+        <>
+          <KpiCards
+            totalLicenses={enrichedFilteredLicenses.length}
+            activeLicensesCount={activeLicensesCount}
+            expiredLicensesCount={expiredLicensesCount}
+            dueSoonLicensesCount={dueSoonLicensesCount}
+          />
+
+          <section className={styles.dashboardBody} ref={contentGridRef}>
+            <div className={styles.sideColumn}>
+              <QuickActionsPanel queueItems={immediateActionQueue} />
+              <StatusDonutPanel licenses={enrichedFilteredLicenses} />
+            </div>
+
+            <LicenseRegisterTable
+              licenses={enrichedFilteredLicenses}
+              searchQuery={searchQuery}
+              onSearchQueryChange={setSearchQuery}
+              selectedStatus={selectedStatus}
+              statusOptions={statusOptions}
+              onSelectStatus={setSelectedStatus}
+              onClearFilters={handleClearFilters}
+              onExport={exportFiltered}
+              onExportPdf={handleExportPdf}
+            />
+          </section>
+        </>
+      )}
 
       {isLicenseModalOpen ? (
         <LicenseModal

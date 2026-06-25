@@ -14,6 +14,8 @@
 
 .heroPanel {
   padding: 28px;
+  position: relative;
+  z-index: 5;
   background:
     radial-gradient(circle at 85% 15%, rgba(28, 115, 163, 0.2), transparent 36%),
     radial-gradient(circle at 0% 100%, rgba(241, 180, 75, 0.14), transparent 38%),
@@ -27,38 +29,30 @@
   gap: 18px;
 }
 
-.heroActions {
-  display: grid;
-  gap: 10px;
-  justify-items: end;
+.heroHospital {
+  margin: 4px 0 6px;
+  font-size: clamp(1.2rem, 2.2vw, 1.5rem);
 }
 
-.primaryAction {
-  border: 1px solid #0e5f8b;
-  background: linear-gradient(135deg, #0e5f8b, #16769d);
-  color: #fff;
-  font: inherit;
-  border-radius: 999px;
-  padding: 9px 14px;
-  cursor: pointer;
+.profileMenu {
+  position: relative;
+  flex-shrink: 0;
 }
 
-.themeToggle {
+.profileTrigger {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
   border: 1px solid var(--card-border-strong);
   background: var(--surface-soft);
   color: var(--text-main);
-  font: inherit;
-  border-radius: 999px;
-  width: 42px;
-  height: 42px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
   cursor: pointer;
 }
 
-.themeToggle svg {
+.profileTrigger svg {
   width: 20px;
   height: 20px;
   fill: none;
@@ -68,15 +62,82 @@
   stroke-linejoin: round;
 }
 
-.themeToggle svg circle {
+.profileTrigger svg circle {
   fill: currentColor;
   stroke: none;
 }
 
-.themeToggle:focus-visible {
+.profileTrigger:focus-visible {
   outline: 2px solid rgba(22, 118, 157, 0.35);
   outline-offset: 2px;
 }
+
+.profileDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  min-width: 220px;
+  background: var(--surface);
+  border: 1px solid var(--card-border-strong);
+  border-radius: 14px;
+  box-shadow: 0 8px 28px rgba(16, 42, 67, 0.14);
+  padding: 6px;
+}
+
+.profileSyncLine {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.profileDivider {
+  border: none;
+  border-top: 1px solid var(--card-border);
+  margin: 4px 0;
+}
+
+.profileItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font: inherit;
+  font-size: 0.88rem;
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+.profileItem:hover {
+  background: var(--surface-soft);
+}
+
+.profileItem svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.profileItem svg circle {
+  fill: currentColor;
+  stroke: none;
+}
+
+.profileItemDanger {
+  color: #9f3b2d;
+}
+
 
 .srOnly {
   position: absolute;
@@ -146,30 +207,6 @@
   margin: 0;
 }
 
-.heroKpis {
-  margin-top: 12px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.heroKpis span {
-  font-size: 0.76rem;
-  border: 1px solid var(--card-border-strong);
-  background: var(--surface-soft);
-  border-radius: 999px;
-  padding: 4px 10px;
-  color: var(--text-soft);
-}
-
-.reportPill {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  border: 1px dashed var(--card-border-strong);
-  border-radius: 999px;
-  padding: 8px 14px;
-  white-space: nowrap;
-}
 
 .statusBanner {
   margin: 0;
@@ -181,9 +218,287 @@
   font-size: 0.86rem;
 }
 
-.hospitalDirectory {
-  padding: 14px;
+.loadingPanel {
+  padding: 22px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-color: color-mix(in srgb, #0e5f8b 20%, var(--card-border));
+  background:
+    linear-gradient(135deg, rgba(14, 95, 139, 0.08), rgba(241, 180, 75, 0.08)),
+    var(--card-bg);
 }
+
+.loadingCopy {
+  display: grid;
+  gap: 8px;
+}
+
+.loadingCopy h2,
+.loadingCopy p {
+  margin: 0;
+}
+
+.loadingCopy h2 {
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+}
+
+.loadingCopy p {
+  max-width: 64ch;
+  color: var(--text-soft);
+}
+
+.loadingEyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.74rem;
+  color: #0e5f8b;
+  font-weight: 700;
+}
+
+.loadingPulseRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.loadingDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #0e5f8b, #16769d);
+  box-shadow: 0 0 0 0 rgba(14, 95, 139, 0.18);
+  animation: loadingPulse 1.2s ease-in-out infinite;
+}
+
+.loadingDot:nth-child(2) {
+  animation-delay: 0.18s;
+}
+
+.loadingDot:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+.loadingHeroCard,
+.loadingControlsCard,
+.loadingSidePanel,
+.loadingTableCard,
+.loadingChartCard,
+.loadingStatCard {
+  position: relative;
+  overflow: hidden;
+}
+
+.loadingHeroCard,
+.loadingControlsCard,
+.loadingSidePanel,
+.loadingTableCard,
+.loadingChartCard,
+.loadingStatCard,
+.loadingField,
+.loadingButton,
+.loadingButtonShort,
+.loadingPanelTitle,
+.loadingListItem,
+.loadingListItemShort,
+.loadingTableHeader,
+.loadingTableRow,
+.loadingChart,
+.loadingLegendRow,
+.loadingLegendRowShort,
+.loadingLabel,
+.loadingValue,
+.loadingMeta,
+.loadingBarShort,
+.loadingBarLong {
+  background: linear-gradient(
+    110deg,
+    color-mix(in srgb, var(--surface-soft) 76%, transparent) 8%,
+    color-mix(in srgb, white 55%, var(--surface-soft)) 18%,
+    color-mix(in srgb, var(--surface-soft) 76%, transparent) 33%
+  );
+  background-size: 220% 100%;
+  animation: loadingShimmer 1.9s ease-in-out infinite;
+}
+
+.loadingHeroCard {
+  padding: 18px 20px;
+  display: grid;
+  gap: 12px;
+}
+
+.loadingBarShort,
+.loadingBarLong,
+.loadingLabel,
+.loadingMeta,
+.loadingPanelTitle,
+.loadingListItem,
+.loadingListItemShort,
+.loadingTableHeader,
+.loadingTableRow,
+.loadingLegendRow,
+.loadingLegendRowShort {
+  border-radius: 999px;
+}
+
+.loadingBarShort {
+  width: 180px;
+  height: 12px;
+}
+
+.loadingBarLong {
+  width: min(720px, 100%);
+  height: 16px;
+}
+
+.loadingStatCard {
+  display: grid;
+  gap: 12px;
+}
+
+.loadingLabel {
+  width: 92px;
+  height: 10px;
+}
+
+.loadingValue {
+  width: 70%;
+  max-width: 120px;
+  height: 34px;
+  border-radius: 14px;
+}
+
+.loadingMeta {
+  width: 120px;
+  height: 10px;
+}
+
+.loadingControlsCard {
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+}
+
+.loadingFieldGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.loadingField {
+  height: 44px;
+  border-radius: 12px;
+}
+
+.loadingButtonRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.loadingButton,
+.loadingButtonShort {
+  height: 38px;
+  border-radius: 999px;
+}
+
+.loadingButton {
+  width: 148px;
+}
+
+.loadingButtonShort {
+  width: 104px;
+}
+
+.loadingSidePanel {
+  padding: 20px;
+  display: grid;
+  gap: 14px;
+}
+
+.loadingPanelTitle {
+  width: 150px;
+  height: 14px;
+}
+
+.loadingListItem,
+.loadingListItemShort {
+  height: 12px;
+}
+
+.loadingListItem {
+  width: 100%;
+}
+
+.loadingListItemShort {
+  width: 72%;
+}
+
+.loadingTableCard,
+.loadingChartCard {
+  padding: 20px;
+  display: grid;
+  gap: 14px;
+}
+
+.loadingTableHeader {
+  width: 100%;
+  height: 34px;
+  border-radius: 12px;
+}
+
+.loadingTableRow {
+  width: 100%;
+  height: 48px;
+  border-radius: 14px;
+}
+
+.loadingChart {
+  width: min(240px, 62vw);
+  aspect-ratio: 1;
+  border-radius: 999px;
+  justify-self: center;
+}
+
+.loadingLegendRow,
+.loadingLegendRowShort {
+  height: 12px;
+}
+
+.loadingLegendRow {
+  width: 100%;
+}
+
+.loadingLegendRowShort {
+  width: 74%;
+}
+
+@keyframes loadingPulse {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+    box-shadow: 0 0 0 0 rgba(14, 95, 139, 0.18);
+  }
+
+  50% {
+    transform: translateY(-4px);
+    opacity: 1;
+    box-shadow: 0 0 0 10px rgba(14, 95, 139, 0);
+  }
+}
+
+@keyframes loadingShimmer {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+}
+
 
 .sectionHelp {
   margin: 0 0 10px;
@@ -247,66 +562,56 @@
   color: #1d7a58;
 }
 
-.controls {
-  padding: 16px;
-  display: grid;
-  gap: 16px;
-}
-
-.filterGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.filterField {
-  display: grid;
-  gap: 6px;
-  font-size: 0.8rem;
-  color: var(--text-muted);
-}
-
-.filterField input,
-.filterField select {
-  border: 1px solid var(--card-border-strong);
-  background: var(--surface);
-  color: var(--text-main);
-  font: inherit;
-  border-radius: 10px;
-  min-height: 38px;
-  padding: 8px 10px;
-}
-
-.statusRow {
+.tableFilterRow {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-bottom: 14px;
 }
 
-.statusRow select {
-  flex: 1;
-}
-
-.filterField input:focus,
-.filterField select:focus {
-  outline: 2px solid color-mix(in srgb, var(--button-secondary-text) 28%, transparent);
-  outline-offset: 1px;
-}
-
-.segmented {
+.tableSearchWrap {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  align-items: center;
+  flex: 1;
+  border: 1px solid var(--card-border-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  padding: 0 10px;
+  gap: 8px;
 }
 
-.segmented button {
+.tableSearchWrap svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+}
+
+.tableSearchInput {
+  flex: 1;
+  border: none;
+  background: none;
+  color: var(--text-main);
+  font: inherit;
+  font-size: 0.88rem;
+  padding: 9px 0;
+  min-height: 38px;
+  outline: none;
+}
+
+.tableStatusSelect {
   border: 1px solid var(--card-border-strong);
   background: var(--surface);
   color: var(--text-main);
   font: inherit;
-  border-radius: 999px;
-  padding: 8px 14px;
-  cursor: pointer;
+  font-size: 0.88rem;
+  border-radius: 10px;
+  min-height: 38px;
+  padding: 8px 10px;
 }
 
 .actionBar {
@@ -316,6 +621,15 @@
 }
 
 @media (max-width: 860px) {
+  .loadingPanel {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .loadingFieldGrid {
+    grid-template-columns: 1fr;
+  }
+
   .filterGrid {
     grid-template-columns: 1fr;
   }
@@ -325,24 +639,53 @@
   }
 }
 
-.exportPdfButton {
-  border-color: color-mix(in srgb, var(--button-secondary-text) 24%, var(--card-border-strong));
-  background: color-mix(in srgb, var(--button-secondary-bg) 78%, var(--surface));
-  color: var(--button-secondary-text);
+.exportDropdown {
+  position: relative;
 }
 
-.exportReportButton {
-  border-color: color-mix(in srgb, var(--status-success-border) 75%, var(--card-border-strong));
-  background: color-mix(in srgb, var(--status-success-bg) 72%, var(--surface));
-  color: var(--status-success-text);
+.exportChevron {
+  width: 10px;
+  height: 6px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  margin-left: 6px;
+  vertical-align: middle;
 }
 
-.contentGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 2.35fr) minmax(220px, 0.65fr);
-  align-items: start;
-  gap: 16px;
-  min-width: 0;
+.exportMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 10;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--card-border-strong);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(16, 42, 67, 0.12);
+  min-width: 160px;
+}
+
+.exportMenu li button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font: inherit;
+  font-size: 0.86rem;
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+.exportMenu li button:hover {
+  background: var(--surface-soft);
 }
 
 .dashboardBody {
@@ -353,10 +696,16 @@
   min-width: 0;
 }
 
-.quickActionsPanel {
-  padding: 14px;
+.sideColumn {
+  display: grid;
+  gap: 16px;
+  align-content: start;
   position: sticky;
   top: 14px;
+}
+
+.quickActionsPanel {
+  padding: 14px;
   display: grid;
   gap: 14px;
 }
@@ -420,36 +769,9 @@
   cursor: not-allowed;
 }
 
-.quickStatsList {
-  margin: 0;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.quickStatsList div {
-  border: 1px solid var(--card-border);
-  border-radius: 10px;
-  padding: 8px;
-  background: color-mix(in srgb, var(--surface-soft) 65%, transparent);
-}
-
-.quickStatsList dt {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.74rem;
-}
-
-.quickStatsList dd {
-  margin: 6px 0 0;
-  font-weight: 700;
-  font-size: 1.06rem;
-}
 
 .statusPanel {
   padding: 14px;
-  width: min(260px, 100%);
-  justify-self: end;
 }
 
 .donutLayout {
@@ -821,7 +1143,7 @@ td select,
     grid-template-columns: 1fr;
   }
 
-  .quickActionsPanel {
+  .sideColumn {
     position: static;
   }
 
@@ -835,33 +1157,12 @@ td select,
     text-align: center;
   }
 
-  .contentGrid {
-    grid-template-columns: 1fr;
-  }
-
   .statsGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .statusPanel {
-    width: 100%;
-    justify-self: stretch;
-  }
-
   table {
     min-width: 920px;
-  }
-
-  .heroRow {
-    flex-direction: column;
-  }
-
-  .heroActions {
-    justify-items: start;
-  }
-
-  .reportPill {
-    white-space: normal;
   }
 }
 
@@ -873,14 +1174,12 @@ td select,
   .heroPanel,
   .register,
   .stackedPanels .card,
-  .controls,
   .stat,
   .quickActionsPanel {
     padding: 14px;
   }
 
-  .quickActionsButtons,
-  .quickStatsList {
+  .quickActionsButtons {
     grid-template-columns: 1fr;
   }
 
@@ -891,10 +1190,6 @@ td select,
 
   .modalGrid {
     grid-template-columns: 1fr;
-  }
-
-  .heroKpis {
-    gap: 6px;
   }
 
   .statsGrid {
@@ -912,15 +1207,8 @@ td select,
     width: 100%;
   }
 
-  .heroActions {
-    width: 100%;
-    justify-items: stretch;
-  }
-
-  .reportPill,
   .backToSite,
-  .ghost,
-  .themeToggle {
+  .ghost {
     justify-content: center;
   }
 
@@ -975,9 +1263,6 @@ td select,
     grid-template-columns: 1fr;
   }
 
-  .quickStatsList {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 
   .tableWrap {
     max-height: 500px;
@@ -998,7 +1283,6 @@ td select,
   .heroPanel,
   .register,
   .stackedPanels .card,
-  .controls,
   .stat,
   .quickActionsPanel {
     padding: 12px;

@@ -101,8 +101,8 @@ export class RenewalRules {
     if (simplified === 'active') {
       return 'Active'
     }
-    if (simplified === 'duesoon') {
-      return 'Due Soon'
+    if (simplified === 'duesoon' || simplified === 'expiringsoon') {
+      return 'Expiring Soon'
     }
     if (simplified === 'expired') {
       return 'Expired'

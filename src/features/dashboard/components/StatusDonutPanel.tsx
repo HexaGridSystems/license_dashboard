@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react'
 import type { EnrichedLicense } from '../hooks/useDashboardState'
 import styles from './DashboardPage.module.css'
-import { getStatusColor } from './statusColors'
+import { getStatusColor, normalizeStatusLabel } from './statusColors'
 
 type StatusDonutPanelProps = {
   licenses: EnrichedLicense[]
@@ -13,11 +13,11 @@ export function StatusDonutPanel(props: StatusDonutPanelProps) {
   const counts = new Map<string, number>()
 
   for (const license of licenses) {
-    const status = license.status.trim() || 'Not applicable'
+    const status = normalizeStatusLabel(license.status.trim() || 'Not applicable')
     counts.set(status, (counts.get(status) ?? 0) + 1)
   }
 
-  const knownStatusOrder = ['Active', 'Due Soon', 'Expired', 'One Time'] as const
+  const knownStatusOrder = ['Active', 'Expiring Soon', 'Expired', 'One Time'] as const
   const presentStatuses = Array.from(counts.keys())
   const statusOrder = [
     ...knownStatusOrder.filter((status) => counts.has(status)),

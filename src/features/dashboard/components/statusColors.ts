@@ -1,8 +1,8 @@
-export const knownStatusOrder = ['Active', 'Due Soon', 'Expired', 'One Time'] as const
+export const knownStatusOrder = ['Active', 'Expiring Soon', 'Expired', 'One Time'] as const
 
 const knownStatusColors: Record<string, string> = {
   Active: '#1d7a58',
-  'Due Soon': '#c17f0f',
+  'Expiring Soon': '#c17f0f',
   Expired: '#9f3b2d',
   'One Time': '#1e88e5',
 }
