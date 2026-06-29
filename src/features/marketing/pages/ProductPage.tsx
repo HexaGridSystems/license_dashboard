@@ -24,7 +24,7 @@ export function ProductPage() {
               Sign in to manage records, monitor due dates, and export the latest report snapshots.
             </p>
             <div className={styles.buttonRow}>
-              <Link to="/app" className={styles.ctaButton}>
+              <Link to="/" className={styles.ctaButton}>
                 Go to Login
               </Link>
               <Link to="/contact" className={styles.ghostButton}>

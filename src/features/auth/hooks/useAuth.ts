@@ -3,8 +3,8 @@ import { AUTH_STORAGE_KEY } from '../../../shared/constants/storageKeys'
 import { LocalStorageAdapter } from '../../../shared/services/storage'
 
 const DEMO_USER = {
-  email: 'admin@hospitallegal.com',
-  password: 'admin123',
+  email: 'admin@compliverse.in',
+  password: 'SSCompli@123',
 }
 
 const storageService = new LocalStorageAdapter()
@@ -27,7 +27,7 @@ export function useAuth() {
       return true
     }
 
-    setAuthError('Invalid login. Use the demo credentials shown below.')
+    setAuthError('Invalid login credentials.')
     return false
   }
 
@@ -42,6 +42,5 @@ export function useAuth() {
     setAuthError,
     login,
     logout,
-    demoUser: DEMO_USER,
   }
 }

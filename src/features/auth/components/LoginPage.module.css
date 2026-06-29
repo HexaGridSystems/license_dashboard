@@ -13,12 +13,10 @@
   box-shadow: var(--shadow-soft);
 }
 
-.loginHead {
+.themeToggleDock {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
+  justify-content: flex-end;
+  margin-top: 10px;
 }
 
 .backToSite {

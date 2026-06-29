@@ -8,13 +8,13 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 // Marketing pages disabled — auth enabled
 export default function AppRoot() {
   const { themeMode, toggleTheme } = useTheme()
-  const { isAuthenticated, authError, login, logout, demoUser } = useAuth()
+  const { isAuthenticated, authError, login, logout } = useAuth()
   const dashboard = useDashboardState()
 
   return (
     <Routes>
       <Route
-        path="/app"
+        path="/"
         element={
           isAuthenticated ? (
             <DashboardPage
@@ -27,15 +27,13 @@ export default function AppRoot() {
             <LoginPage
               themeMode={themeMode}
               authError={authError}
-              demoEmail={demoUser.email}
-              demoPassword={demoUser.password}
               onToggleTheme={toggleTheme}
               onLogin={login}
             />
           )
         }
       />
-      <Route path="*" element={<Navigate to="/app" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }

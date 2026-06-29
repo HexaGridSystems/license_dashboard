@@ -92,7 +92,7 @@ export function MarketingLayout(props: MarketingLayoutProps) {
                 </svg>
               )}
             </button>
-            <NavLink to="/app" className={styles.ctaButton} onClick={() => setMobileMenuOpen(false)}>
+            <NavLink to="/" className={styles.ctaButton} onClick={() => setMobileMenuOpen(false)}>
               Open App
             </NavLink>
           </nav>
