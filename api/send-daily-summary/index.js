@@ -374,6 +374,72 @@ function escapeHtml(value) {
 
 function renderEmailHtml(summary) {
   const donutHtml = renderStatusDonutImage(summary.statusBreakdown, summary.totalLicenses)
+  const responsiveStyles = `
+    <style>
+      .email-shell {
+        width: 100% !important;
+      }
+
+      .email-container {
+        width: 100%;
+        max-width: 1120px;
+        margin: 0 auto;
+      }
+
+      .kpi-col {
+        width: 25%;
+      }
+
+      .donut-col {
+        width: 160px;
+      }
+
+      .register-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      @media only screen and (max-width: 760px) {
+        .email-shell {
+          padding: 10px !important;
+        }
+
+        .card {
+          padding: 12px !important;
+        }
+
+        .kpi-col,
+        .status-col,
+        .donut-col {
+          display: block !important;
+          width: 100% !important;
+        }
+
+        .kpi-col > div {
+          margin-bottom: 8px !important;
+        }
+
+        .donut-col {
+          text-align: left !important;
+          padding: 0 0 10px !important;
+        }
+
+        .register-wrap {
+          overflow-x: auto;
+        }
+
+        .register-table {
+          min-width: 940px;
+        }
+
+        .register-table th,
+        .register-table td {
+          font-size: 11px !important;
+          padding: 6px !important;
+        }
+      }
+    </style>
+  `
 
   const statusLegend = summary.statusBreakdown
     .map(
@@ -419,41 +485,54 @@ function renderEmailHtml(summary) {
     .join('')
 
   return `
-    <div style="font-family:Arial, sans-serif; color:#102a43; background:#f4f8fb; padding:16px;">
-      <div style="max-width:1120px;margin:0 auto;">
-        <section style="background:#ffffff;border:1px solid #d6e2ec;border-radius:18px;padding:18px 20px;margin-bottom:14px;">
+    ${responsiveStyles}
+    <div class="email-shell" style="font-family:Arial, sans-serif; color:#102a43; background:#f4f8fb; padding:16px;">
+      <div class="email-container" style="max-width:1120px;margin:0 auto;">
+        <section class="card" style="background:#ffffff;border:1px solid #d6e2ec;border-radius:18px;padding:18px 20px;margin-bottom:14px;">
           <p style="margin:0;color:#486581;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;">Compliverse</p>
           <h2 style="margin:7px 0 5px;font-size:24px;line-height:1.2;color:#102a43;">Licence Dashboard Daily Snapshot</h2>
           <p style="margin:0;color:#627d98;font-size:13px;">Generated at ${escapeHtml(summary.generatedAtIso)} (UTC)</p>
         </section>
 
-        <section style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px;">
-          <article style="background:#ffffff;border:1px solid #d6e2ec;border-radius:14px;padding:12px;">
-            <p style="margin:0;color:#627d98;font-size:12px;">Total licences</p>
-            <h3 style="margin:6px 0 0;font-size:24px;color:#102a43;">${summary.totalLicenses}</h3>
-          </article>
-          <article style="background:#ffffff;border:1px solid #d6e2ec;border-radius:14px;padding:12px;">
-            <p style="margin:0;color:#627d98;font-size:12px;">Active licences</p>
-            <h3 style="margin:6px 0 0;font-size:24px;color:#1d7a58;">${summary.activeCount}</h3>
-          </article>
-          <article style="background:#ffffff;border:1px solid #d6e2ec;border-radius:14px;padding:12px;">
-            <p style="margin:0;color:#627d98;font-size:12px;">Expired licences</p>
-            <h3 style="margin:6px 0 0;font-size:24px;color:#9f3b2d;">${summary.expiredCount}</h3>
-          </article>
-          <article style="background:#ffffff;border:1px solid #d6e2ec;border-radius:14px;padding:12px;">
-            <p style="margin:0;color:#627d98;font-size:12px;">Expiring soon</p>
-            <h3 style="margin:6px 0 0;font-size:24px;color:#925e00;">${summary.expiringSoonCount}</h3>
-          </article>
+        <section style="margin-bottom:12px;">
+          <table role="presentation" width="100%" style="border-collapse:collapse;">
+            <tr>
+              <td class="kpi-col" style="padding:0 5px 0 0;vertical-align:top;">
+                <div class="card" style="background:#ffffff;border:1px solid #d6e2ec;border-radius:14px;padding:12px;">
+                  <p style="margin:0;color:#627d98;font-size:12px;">Total licences</p>
+                  <h3 style="margin:6px 0 0;font-size:24px;color:#102a43;">${summary.totalLicenses}</h3>
+                </div>
+              </td>
+              <td class="kpi-col" style="padding:0 5px;vertical-align:top;">
+                <div class="card" style="background:#ffffff;border:1px solid #d6e2ec;border-radius:14px;padding:12px;">
+                  <p style="margin:0;color:#627d98;font-size:12px;">Active licences</p>
+                  <h3 style="margin:6px 0 0;font-size:24px;color:#1d7a58;">${summary.activeCount}</h3>
+                </div>
+              </td>
+              <td class="kpi-col" style="padding:0 5px;vertical-align:top;">
+                <div class="card" style="background:#ffffff;border:1px solid #d6e2ec;border-radius:14px;padding:12px;">
+                  <p style="margin:0;color:#627d98;font-size:12px;">Expired licences</p>
+                  <h3 style="margin:6px 0 0;font-size:24px;color:#9f3b2d;">${summary.expiredCount}</h3>
+                </div>
+              </td>
+              <td class="kpi-col" style="padding:0 0 0 5px;vertical-align:top;">
+                <div class="card" style="background:#ffffff;border:1px solid #d6e2ec;border-radius:14px;padding:12px;">
+                  <p style="margin:0;color:#627d98;font-size:12px;">Expiring soon</p>
+                  <h3 style="margin:6px 0 0;font-size:24px;color:#925e00;">${summary.expiringSoonCount}</h3>
+                </div>
+              </td>
+            </tr>
+          </table>
         </section>
 
-        <section style="background:#ffffff;border:1px solid #d6e2ec;border-radius:14px;padding:12px 14px;margin-bottom:12px;">
+        <section class="card" style="background:#ffffff;border:1px solid #d6e2ec;border-radius:14px;padding:12px 14px;margin-bottom:12px;">
           <h3 style="margin:0 0 10px;font-size:16px;color:#102a43;">Status Breakdown</h3>
           <table role="presentation" width="100%" style="border-collapse:collapse;">
             <tr>
-              <td style="width:160px;vertical-align:top;text-align:center;padding:6px 8px 4px;">
+              <td class="donut-col" style="width:160px;vertical-align:top;text-align:center;padding:6px 8px 4px;">
                 ${donutHtml}
               </td>
-              <td style="vertical-align:top;padding:4px 2px 2px 12px;">
+              <td class="status-col" style="vertical-align:top;padding:4px 2px 2px 12px;">
                 <table width="100%" style="border-collapse:collapse;">
                   <thead>
                     <tr>
@@ -471,9 +550,10 @@ function renderEmailHtml(summary) {
           </table>
         </section>
 
-        <section style="background:#ffffff;border:1px solid #d6e2ec;border-radius:14px;padding:12px;">
+        <section class="card" style="background:#ffffff;border:1px solid #d6e2ec;border-radius:14px;padding:12px;">
           <h3 style="margin:0 0 10px;font-size:16px;color:#102a43;">Licence Register</h3>
-          <table style="border-collapse:collapse; width:100%;">
+          <div class="register-wrap" style="width:100%;">
+          <table class="register-table" style="border-collapse:collapse; width:100%;">
             <thead>
               <tr>
                 <th style="padding:8px;border:1px solid #c8d5df;text-align:left;background:#f3f7fa;">#</th>
@@ -492,6 +572,7 @@ function renderEmailHtml(summary) {
               ${rows || '<tr><td colspan="10" style="padding:10px;border:1px solid #d9dee5;">No license records found.</td></tr>'}
             </tbody>
           </table>
+          </div>
         </section>
       </div>
     </div>
