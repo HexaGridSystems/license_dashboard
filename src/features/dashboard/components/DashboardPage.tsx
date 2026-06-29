@@ -9,6 +9,7 @@ import { LicenseModal } from './LicenseModal'
 import { LicenseRegisterTable } from './LicenseRegisterTable'
 import { QuickActionsPanel } from './QuickActionsPanel'
 import { StatusDonutPanel } from './StatusDonutPanel'
+import { buildStatusOrder, getStatusColor, normalizeStatusLabel } from './statusColors'
 import { WizardModal } from './WizardModal'
 
 type DashboardPageProps = {
@@ -71,8 +72,15 @@ export function DashboardPage(props: DashboardPageProps) {
     try {
       await exportElementToPdf({
         element: exportNode,
-        filePrefix: 'Licence dashboard',
+        filePrefix: 'Compliverse dashboard',
         title: 'Licence Dashboard Report',
+        summary: {
+          totalLicences: enrichedFilteredLicenses.length,
+          activeLicences: activeLicensesCount,
+          expiredLicences: expiredLicensesCount,
+          expiringSoonLicences: dueSoonLicensesCount,
+        },
+        statusBreakdown: statusBreakdown,
       })
       setAuthBanner('PDF export opened. Choose Save as PDF to download.')
     } catch {
@@ -114,6 +122,25 @@ export function DashboardPage(props: DashboardPageProps) {
         return leftDays - rightDays
       })
       .slice(0, 5)
+  }, [enrichedFilteredLicenses])
+
+  const statusBreakdown = useMemo(() => {
+    const counts = new Map<string, number>()
+
+    for (const license of enrichedFilteredLicenses) {
+      const status = normalizeStatusLabel(license.status.trim() || 'Not applicable')
+      counts.set(status, (counts.get(status) ?? 0) + 1)
+    }
+
+    const orderedStatuses = buildStatusOrder(Array.from(counts.keys()))
+
+    return orderedStatuses
+      .map((status) => ({
+        label: status,
+        count: counts.get(status) ?? 0,
+        color: getStatusColor(status, orderedStatuses),
+      }))
+      .filter((item) => item.count > 0)
   }, [enrichedFilteredLicenses])
 
   const showInitialLoadingState = isInitialLoadPending

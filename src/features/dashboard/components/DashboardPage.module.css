@@ -727,8 +727,7 @@
 }
 
 .quickQueueList {
-  max-height: 340px;
-  overflow: auto;
+  overflow: visible;
 }
 
 .quickQueueList li {
@@ -902,8 +901,7 @@
 }
 
 .tableWrap {
-  overflow: auto;
-  max-height: 540px;
+  overflow: visible;
   width: 100%;
 }
 
