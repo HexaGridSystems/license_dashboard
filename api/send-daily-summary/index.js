@@ -83,8 +83,11 @@ function normalizeLicense(row, fallbackIndex) {
       'Expiration Date',
     ]),
     category: pickField(row, ['category', 'Category']),
+    licenceNumber: pickField(row, ['licenceNumber', 'Licence Number', 'License Number']),
+    issueDate: pickField(row, ['issueDate', 'Valid from', 'Valid From', 'Issue Date']),
     status: pickField(row, ['status', 'Status']),
     action: pickField(row, ['action', 'Action']),
+    documents: pickField(row, ['documents', 'Documents', 'Document Link', 'Document URL']),
   }
 
   return normalized
@@ -300,6 +303,7 @@ function summarizeLicenses(licenses) {
   const registerRows = licenses
     .map((license, index) => {
       const expiry = parseDate(license.expiryDate)
+      const issue = parseDate(license.issueDate)
       const daysLeft = expiry ? daysUntil(expiry, now) : null
       const statusLabel = normalizeStatusLabel(license.status, daysLeft)
 
@@ -307,14 +311,10 @@ function summarizeLicenses(licenses) {
         ...license,
         serialNumber: index + 1,
         daysLeft,
+        issueDateISO: issue ? issue.toISOString().slice(0, 10) : '-',
         expiryDateISO: expiry ? expiry.toISOString().slice(0, 10) : '-',
         statusLabel,
       }
-    })
-    .sort((left, right) => {
-      const leftDays = left.daysLeft === null ? Number.MAX_SAFE_INTEGER : left.daysLeft
-      const rightDays = right.daysLeft === null ? Number.MAX_SAFE_INTEGER : right.daysLeft
-      return leftDays - rightDays
     })
 
   const withExpiry = registerRows.filter((item) => item.daysLeft !== null)
@@ -374,18 +374,25 @@ function renderEmailHtml(summary) {
     .map((item) => {
       const statusTheme = getStatusTheme(item.statusLabel)
       const daysLeftLabel = item.daysLeft === null ? '-' : String(item.daysLeft)
+      const documentsValue = asString(item.documents)
+      const documentsCell = documentsValue
+        ? `<a href="${escapeHtml(documentsValue)}" style="color:#0e5f8b;text-decoration:underline;">Open document</a>`
+        : '-'
 
       return `
         <tr>
           <td style="padding:8px;border:1px solid #d9dee5;">${item.serialNumber}</td>
           <td style="padding:8px;border:1px solid #d9dee5;">${escapeHtml(item.licenceName || item.id)}</td>
           <td style="padding:8px;border:1px solid #d9dee5;">${escapeHtml(item.category || '-')}</td>
-          <td style="padding:8px;border:1px solid #d9dee5;">${escapeHtml(isoDateOrDash(item.expiryDateISO))}</td>
+          <td style="padding:8px;border:1px solid #d9dee5;">${escapeHtml(item.licenceNumber || '-')}</td>
+          <td style="padding:8px;border:1px solid #d9dee5;">${escapeHtml(item.issueDateISO || '-')}</td>
+          <td style="padding:8px;border:1px solid #d9dee5;">${escapeHtml(item.expiryDateISO || '-')}</td>
           <td style="padding:8px;border:1px solid #d9dee5;">${escapeHtml(daysLeftLabel)}</td>
           <td style="padding:8px;border:1px solid #d9dee5;">
             <span style="display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:700;color:${statusTheme.color};background:${statusTheme.background};border:1px solid ${statusTheme.border};">${escapeHtml(item.statusLabel)}</span>
           </td>
           <td style="padding:8px;border:1px solid #d9dee5;">${escapeHtml(item.action || '-')}</td>
+          <td style="padding:8px;border:1px solid #d9dee5;">${documentsCell}</td>
         </tr>
       `
     })
@@ -452,14 +459,17 @@ function renderEmailHtml(summary) {
                 <th style="padding:8px;border:1px solid #c8d5df;text-align:left;background:#f3f7fa;">#</th>
                 <th style="padding:8px;border:1px solid #c8d5df;text-align:left;background:#f3f7fa;">License/Vendor name</th>
                 <th style="padding:8px;border:1px solid #c8d5df;text-align:left;background:#f3f7fa;">Category</th>
+                <th style="padding:8px;border:1px solid #c8d5df;text-align:left;background:#f3f7fa;">Licence Number</th>
+                <th style="padding:8px;border:1px solid #c8d5df;text-align:left;background:#f3f7fa;">Valid from</th>
                 <th style="padding:8px;border:1px solid #c8d5df;text-align:left;background:#f3f7fa;">Valid till</th>
                 <th style="padding:8px;border:1px solid #c8d5df;text-align:left;background:#f3f7fa;">Remaining days</th>
                 <th style="padding:8px;border:1px solid #c8d5df;text-align:left;background:#f3f7fa;">Status</th>
                 <th style="padding:8px;border:1px solid #c8d5df;text-align:left;background:#f3f7fa;">Action</th>
+                <th style="padding:8px;border:1px solid #c8d5df;text-align:left;background:#f3f7fa;">Documents</th>
               </tr>
             </thead>
             <tbody>
-              ${rows || '<tr><td colspan="7" style="padding:10px;border:1px solid #d9dee5;">No license records found.</td></tr>'}
+              ${rows || '<tr><td colspan="10" style="padding:10px;border:1px solid #d9dee5;">No license records found.</td></tr>'}
             </tbody>
           </table>
         </section>
