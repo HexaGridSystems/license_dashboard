@@ -399,15 +399,8 @@ function renderEmailHtml(summary) {
         border-collapse: collapse;
       }
 
-      .mobile-only {
+      .cell-label {
         display: none;
-        max-height: 0;
-        overflow: hidden;
-        mso-hide: all;
-      }
-
-      .desktop-only {
-        display: block;
       }
 
       @media only screen and (max-width: 760px) {
@@ -435,30 +428,55 @@ function renderEmailHtml(summary) {
           padding: 0 0 10px !important;
         }
 
-        .register-wrap {
-          overflow-x: auto;
-        }
-
-        .register-table {
-          min-width: 940px;
-        }
-
-        .register-table th,
-        .register-table td {
-          font-size: 11px !important;
-          padding: 6px !important;
-        }
-
-        .desktop-only {
+        .register-table thead {
           display: none !important;
-          max-height: 0 !important;
-          overflow: hidden !important;
         }
 
-        .mobile-only {
+        .register-table,
+        .register-table tbody,
+        .register-table tr,
+        .register-table td {
           display: block !important;
-          max-height: none !important;
-          overflow: visible !important;
+          width: 100% !important;
+        }
+
+        .register-table tr {
+          border: 1px solid #d9dee5 !important;
+          border-radius: 10px !important;
+          margin-bottom: 8px !important;
+          overflow: hidden !important;
+          background: #ffffff !important;
+        }
+
+        .register-table td {
+          border: 0 !important;
+          border-bottom: 1px solid #eef3f8 !important;
+          padding: 7px 8px !important;
+          font-size: 12px !important;
+          text-align: left !important;
+        }
+
+        .register-table tr td:last-child {
+          border-bottom: 0 !important;
+        }
+
+        .cell-label {
+          display: inline-block !important;
+          width: 44% !important;
+          color: #486581 !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          vertical-align: top !important;
+          padding-right: 8px !important;
+          box-sizing: border-box !important;
+        }
+
+        .cell-value {
+          display: inline-block !important;
+          width: 56% !important;
+          color: #102a43 !important;
+          vertical-align: top !important;
+          word-break: break-word !important;
         }
       }
     </style>
@@ -490,52 +508,20 @@ function renderEmailHtml(summary) {
 
       return `
         <tr>
-          <td style="padding:8px;border:1px solid #d9dee5;">${item.serialNumber}</td>
-          <td style="padding:8px;border:1px solid #d9dee5;">${escapeHtml(item.licenceName || item.id)}</td>
-          <td style="padding:8px;border:1px solid #d9dee5;">${escapeHtml(item.category || '-')}</td>
-          <td style="padding:8px;border:1px solid #d9dee5;">${escapeHtml(item.licenceNumber || '-')}</td>
-          <td style="padding:8px;border:1px solid #d9dee5;">${escapeHtml(item.issueDateISO || '-')}</td>
-          <td style="padding:8px;border:1px solid #d9dee5;">${escapeHtml(item.expiryDateISO || '-')}</td>
-          <td style="padding:8px;border:1px solid #d9dee5;">${escapeHtml(daysLeftLabel)}</td>
+          <td style="padding:8px;border:1px solid #d9dee5;"><span class="cell-label">Serial Number</span><span class="cell-value">${item.serialNumber}</span></td>
+          <td style="padding:8px;border:1px solid #d9dee5;"><span class="cell-label">License/Vendor name</span><span class="cell-value">${escapeHtml(item.licenceName || item.id)}</span></td>
+          <td style="padding:8px;border:1px solid #d9dee5;"><span class="cell-label">Category</span><span class="cell-value">${escapeHtml(item.category || '-')}</span></td>
+          <td style="padding:8px;border:1px solid #d9dee5;"><span class="cell-label">Licence Number</span><span class="cell-value">${escapeHtml(item.licenceNumber || '-')}</span></td>
+          <td style="padding:8px;border:1px solid #d9dee5;"><span class="cell-label">Valid from</span><span class="cell-value">${escapeHtml(item.issueDateISO || '-')}</span></td>
+          <td style="padding:8px;border:1px solid #d9dee5;"><span class="cell-label">Valid till</span><span class="cell-value">${escapeHtml(item.expiryDateISO || '-')}</span></td>
+          <td style="padding:8px;border:1px solid #d9dee5;"><span class="cell-label">Remaining days</span><span class="cell-value">${escapeHtml(daysLeftLabel)}</span></td>
           <td style="padding:8px;border:1px solid #d9dee5;">
-            <span style="display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:700;color:${statusTheme.color};background:${statusTheme.background};border:1px solid ${statusTheme.border};">${escapeHtml(item.statusLabel)}</span>
+            <span class="cell-label">Status</span>
+            <span class="cell-value"><span style="display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:700;color:${statusTheme.color};background:${statusTheme.background};border:1px solid ${statusTheme.border};">${escapeHtml(item.statusLabel)}</span></span>
           </td>
-          <td style="padding:8px;border:1px solid #d9dee5;">${escapeHtml(item.action || '-')}</td>
-          <td style="padding:8px;border:1px solid #d9dee5;">${documentsCell}</td>
+          <td style="padding:8px;border:1px solid #d9dee5;"><span class="cell-label">Action</span><span class="cell-value">${escapeHtml(item.action || '-')}</span></td>
+          <td style="padding:8px;border:1px solid #d9dee5;"><span class="cell-label">Documents</span><span class="cell-value">${documentsCell}</span></td>
         </tr>
-      `
-    })
-    .join('')
-
-  const mobileRows = summary.registerRows
-    .map((item) => {
-      const statusTheme = getStatusTheme(item.statusLabel)
-      const daysLeftLabel = item.remainingDaysDisplay === null ? '-' : String(item.remainingDaysDisplay)
-      const documentsValue = asString(item.documents)
-      const documentsCell = documentsValue
-        ? `<a href="${escapeHtml(documentsValue)}" style="color:#0e5f8b;text-decoration:underline;">Open document</a>`
-        : '-'
-
-      return `
-        <section style="border:1px solid #d9dee5;border-radius:10px;padding:10px;margin-bottom:8px;background:#ffffff;">
-          <table role="presentation" width="100%" style="border-collapse:collapse;">
-            <tr><td style="padding:4px 0;color:#486581;font-size:11px;">Serial Number</td><td style="padding:4px 0;text-align:right;font-size:12px;font-weight:700;color:#102a43;">${item.serialNumber}</td></tr>
-            <tr><td style="padding:4px 0;color:#486581;font-size:11px;">License/Vendor name</td><td style="padding:4px 0;text-align:right;font-size:12px;color:#102a43;">${escapeHtml(item.licenceName || item.id)}</td></tr>
-            <tr><td style="padding:4px 0;color:#486581;font-size:11px;">Category</td><td style="padding:4px 0;text-align:right;font-size:12px;color:#102a43;">${escapeHtml(item.category || '-')}</td></tr>
-            <tr><td style="padding:4px 0;color:#486581;font-size:11px;">Licence Number</td><td style="padding:4px 0;text-align:right;font-size:12px;color:#102a43;">${escapeHtml(item.licenceNumber || '-')}</td></tr>
-            <tr><td style="padding:4px 0;color:#486581;font-size:11px;">Valid from</td><td style="padding:4px 0;text-align:right;font-size:12px;color:#102a43;">${escapeHtml(item.issueDateISO || '-')}</td></tr>
-            <tr><td style="padding:4px 0;color:#486581;font-size:11px;">Valid till</td><td style="padding:4px 0;text-align:right;font-size:12px;color:#102a43;">${escapeHtml(item.expiryDateISO || '-')}</td></tr>
-            <tr><td style="padding:4px 0;color:#486581;font-size:11px;">Remaining days</td><td style="padding:4px 0;text-align:right;font-size:12px;color:#102a43;">${escapeHtml(daysLeftLabel)}</td></tr>
-            <tr>
-              <td style="padding:4px 0;color:#486581;font-size:11px;">Status</td>
-              <td style="padding:4px 0;text-align:right;">
-                <span style="display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700;color:${statusTheme.color};background:${statusTheme.background};border:1px solid ${statusTheme.border};">${escapeHtml(item.statusLabel)}</span>
-              </td>
-            </tr>
-            <tr><td style="padding:4px 0;color:#486581;font-size:11px;">Action</td><td style="padding:4px 0;text-align:right;font-size:12px;color:#102a43;">${escapeHtml(item.action || '-')}</td></tr>
-            <tr><td style="padding:4px 0;color:#486581;font-size:11px;">Documents</td><td style="padding:4px 0;text-align:right;font-size:12px;color:#102a43;">${documentsCell}</td></tr>
-          </table>
-        </section>
       `
     })
     .join('')
@@ -608,7 +594,7 @@ function renderEmailHtml(summary) {
 
         <section class="card" style="background:#ffffff;border:1px solid #d6e2ec;border-radius:14px;padding:12px;">
           <h3 style="margin:0 0 10px;font-size:16px;color:#102a43;">Licence Register</h3>
-          <div class="register-wrap desktop-only" style="width:100%;">
+          <div class="register-wrap" style="width:100%;">
           <table class="register-table" style="border-collapse:collapse; width:100%;">
             <thead>
               <tr>
@@ -628,9 +614,6 @@ function renderEmailHtml(summary) {
               ${rows || '<tr><td colspan="10" style="padding:10px;border:1px solid #d9dee5;">No license records found.</td></tr>'}
             </tbody>
           </table>
-          </div>
-          <div class="mobile-only" style="display:none;max-height:0;overflow:hidden;mso-hide:all;">
-            ${mobileRows || '<p style="margin:0;color:#627d98;font-size:12px;">No license records found.</p>'}
           </div>
         </section>
       </div>

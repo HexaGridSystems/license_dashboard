@@ -1,0 +1,12 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "CRON_SECRET": "local-dev-secret",
+    "APPS_SCRIPT_URL": "https://example.invalid/exec",
+    "RESEND_API_KEY": "local-dev-key",
+    "EMAIL_FROM": "noreply@example.com",
+    "EMAIL_TO": "dev@example.com"
+  }
+}
