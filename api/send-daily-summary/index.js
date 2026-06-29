@@ -132,28 +132,174 @@ function daysUntil(date, now) {
   return Math.floor((end - start) / DAY_MS)
 }
 
-function summarizeLicenses(licenses) {
-  const now = new Date()
-  const withExpiry = []
+const STATUS_ORDER = ['Active', 'Expiring Soon', 'Expired', 'One Time']
 
-  for (const license of licenses) {
-    const expiry = parseDate(license.expiryDate)
-    if (!expiry) {
-      continue
-    }
+const STATUS_THEME = {
+  Active: {
+    color: '#1d7a58',
+    background: '#dbf6ea',
+    border: '#93d9ba',
+  },
+  'Expiring Soon': {
+    color: '#925e00',
+    background: '#fff2d8',
+    border: '#f0d79d',
+  },
+  Expired: {
+    color: '#9f3b2d',
+    background: '#fde7e2',
+    border: '#f0bcb1',
+  },
+  'One Time': {
+    color: '#1e88e5',
+    background: '#dff0ff',
+    border: '#a8d0f5',
+  },
+  Unknown: {
+    color: '#35536b',
+    background: '#edf3f8',
+    border: '#c9d8e4',
+  },
+}
 
-    withExpiry.push({
-      ...license,
-      daysLeft: daysUntil(expiry, now),
-      expiryDateISO: expiry.toISOString().slice(0, 10),
-    })
+function isoDateOrDash(dateValue) {
+  const parsed = parseDate(dateValue)
+  return parsed ? parsed.toISOString().slice(0, 10) : '-'
+}
+
+function normalizeStatusLabel(rawStatus, daysLeft) {
+  const value = asString(rawStatus).toLowerCase()
+
+  if (value.includes('one time') || value.includes('one-time')) {
+    return 'One Time'
   }
 
-  withExpiry.sort((a, b) => a.daysLeft - b.daysLeft)
+  if (
+    value.includes('expired') ||
+    value.includes('overdue') ||
+    value.includes('lapsed') ||
+    value.includes('past due')
+  ) {
+    return 'Expired'
+  }
 
+  if (
+    value.includes('due soon') ||
+    value.includes('expiring soon') ||
+    value.includes('expiring') ||
+    value.includes('renew')
+  ) {
+    return 'Expiring Soon'
+  }
+
+  if (value.includes('active') || value.includes('valid')) {
+    return 'Active'
+  }
+
+  if (daysLeft === null) {
+    return 'Active'
+  }
+
+  if (daysLeft < 0) {
+    return 'Expired'
+  }
+
+  if (daysLeft <= 30) {
+    return 'Expiring Soon'
+  }
+
+  return 'Active'
+}
+
+function getStatusTheme(statusLabel) {
+  return STATUS_THEME[statusLabel] || STATUS_THEME.Unknown
+}
+
+function buildStatusBreakdown(registerRows) {
+  const counts = new Map()
+
+  for (const row of registerRows) {
+    counts.set(row.statusLabel, (counts.get(row.statusLabel) || 0) + 1)
+  }
+
+  const known = STATUS_ORDER.filter((status) => counts.has(status)).map((status) => ({
+    label: status,
+    count: counts.get(status) || 0,
+    color: getStatusTheme(status).color,
+  }))
+
+  const custom = Array.from(counts.entries())
+    .filter(([label]) => !STATUS_ORDER.includes(label))
+    .sort((a, b) => String(a[0]).localeCompare(String(b[0])))
+    .map(([label, count]) => ({
+      label,
+      count,
+      color: STATUS_THEME.Unknown.color,
+    }))
+
+  return [...known, ...custom]
+}
+
+function renderStatusDonutSvg(statusBreakdown, total) {
+  const radius = 52
+  const circumference = 2 * Math.PI * radius
+  let offset = 0
+
+  const segments = statusBreakdown
+    .map((item) => {
+      if (!total || item.count <= 0) {
+        return ''
+      }
+
+      const length = (item.count / total) * circumference
+      const segment = `<circle cx="64" cy="64" r="${radius}" fill="none" stroke="${item.color}" stroke-width="24" stroke-dasharray="${length} ${circumference - length}" stroke-dashoffset="${-offset}" />`
+      offset += length
+      return segment
+    })
+    .join('')
+
+  return `
+    <svg width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="Status breakdown">
+      <circle cx="64" cy="64" r="${radius}" fill="none" stroke="#d9dee5" stroke-width="24" />
+      <g transform="rotate(-90 64 64)">${segments}</g>
+      <circle cx="64" cy="64" r="29" fill="#ffffff" stroke="#d9dee5" />
+      <text x="64" y="61" text-anchor="middle" style="font:700 19px Arial, sans-serif; fill:#102a43;">${total}</text>
+      <text x="64" y="78" text-anchor="middle" style="font:600 10px Arial, sans-serif; fill:#486581;">Total</text>
+    </svg>
+  `
+}
+
+function summarizeLicenses(licenses) {
+  const now = new Date()
+  const registerRows = licenses
+    .map((license, index) => {
+      const expiry = parseDate(license.expiryDate)
+      const daysLeft = expiry ? daysUntil(expiry, now) : null
+      const statusLabel = normalizeStatusLabel(license.status, daysLeft)
+
+      return {
+        ...license,
+        serialNumber: index + 1,
+        daysLeft,
+        expiryDateISO: expiry ? expiry.toISOString().slice(0, 10) : '-',
+        statusLabel,
+      }
+    })
+    .sort((left, right) => {
+      const leftDays = left.daysLeft === null ? Number.MAX_SAFE_INTEGER : left.daysLeft
+      const rightDays = right.daysLeft === null ? Number.MAX_SAFE_INTEGER : right.daysLeft
+      return leftDays - rightDays
+    })
+
+  const withExpiry = registerRows.filter((item) => item.daysLeft !== null)
   const overdue = withExpiry.filter((item) => item.daysLeft < 0)
   const dueIn15Days = withExpiry.filter((item) => item.daysLeft >= 0 && item.daysLeft <= 15)
   const dueIn90Days = withExpiry.filter((item) => item.daysLeft >= 0 && item.daysLeft <= 90)
+  const statusBreakdown = buildStatusBreakdown(registerRows)
+
+  const activeCount = registerRows.filter((item) => item.statusLabel === 'Active').length
+  const expiredCount = registerRows.filter((item) => item.statusLabel === 'Expired').length
+  const expiringSoonCount = registerRows.filter((item) => item.statusLabel === 'Expiring Soon').length
 
   return {
     totalLicenses: licenses.length,
@@ -161,6 +307,11 @@ function summarizeLicenses(licenses) {
     overdueCount: overdue.length,
     dueIn15DaysCount: dueIn15Days.length,
     dueIn90DaysCount: dueIn90Days.length,
+    activeCount,
+    expiredCount,
+    expiringSoonCount,
+    statusBreakdown,
+    registerRows,
     topUrgent: withExpiry.slice(0, 20),
     generatedAtIso: now.toISOString(),
   }
@@ -176,48 +327,117 @@ function escapeHtml(value) {
 }
 
 function renderEmailHtml(summary) {
-  const rows = summary.topUrgent
+  const donutHtml = renderStatusDonutSvg(summary.statusBreakdown, summary.totalLicenses)
+
+  const statusLegend = summary.statusBreakdown
     .map(
       (item) => `
         <tr>
-          <td style="padding:8px;border:1px solid #ddd;">${escapeHtml(item.licenceName || item.id)}</td>
-          <td style="padding:8px;border:1px solid #ddd;">${escapeHtml(item.category)}</td>
-          <td style="padding:8px;border:1px solid #ddd;">${escapeHtml(item.expiryDateISO)}</td>
-          <td style="padding:8px;border:1px solid #ddd;">${escapeHtml(String(item.daysLeft))}</td>
-          <td style="padding:8px;border:1px solid #ddd;">${escapeHtml(item.status)}</td>
+          <td style="padding:6px 8px;border-bottom:1px solid #e7edf3;">
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${escapeHtml(item.color)};margin-right:6px;vertical-align:middle;"></span>
+            <span style="vertical-align:middle;">${escapeHtml(item.label)}</span>
+          </td>
+          <td style="padding:6px 8px;border-bottom:1px solid #e7edf3;text-align:right;font-weight:700;">${item.count}</td>
+          <td style="padding:6px 8px;border-bottom:1px solid #e7edf3;text-align:right;color:#486581;">${summary.totalLicenses > 0 ? Math.round((item.count / summary.totalLicenses) * 100) : 0}%</td>
         </tr>
       `,
     )
     .join('')
 
+  const rows = summary.registerRows
+    .map((item) => {
+      const statusTheme = getStatusTheme(item.statusLabel)
+      const daysLeftLabel = item.daysLeft === null ? '-' : String(item.daysLeft)
+
+      return `
+        <tr>
+          <td style="padding:8px;border:1px solid #d9dee5;">${item.serialNumber}</td>
+          <td style="padding:8px;border:1px solid #d9dee5;">${escapeHtml(item.licenceName || item.id)}</td>
+          <td style="padding:8px;border:1px solid #d9dee5;">${escapeHtml(item.category || '-')}</td>
+          <td style="padding:8px;border:1px solid #d9dee5;">${escapeHtml(isoDateOrDash(item.expiryDateISO))}</td>
+          <td style="padding:8px;border:1px solid #d9dee5;">${escapeHtml(daysLeftLabel)}</td>
+          <td style="padding:8px;border:1px solid #d9dee5;">
+            <span style="display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:700;color:${statusTheme.color};background:${statusTheme.background};border:1px solid ${statusTheme.border};">${escapeHtml(item.statusLabel)}</span>
+          </td>
+          <td style="padding:8px;border:1px solid #d9dee5;">${escapeHtml(item.action || '-')}</td>
+        </tr>
+      `
+    })
+    .join('')
+
   return `
-    <div style="font-family:Arial, sans-serif; color:#1f2937;">
-      <h2 style="margin-bottom:8px;">Daily License Dashboard Summary</h2>
-      <p style="margin-top:0; color:#4b5563;">Generated at ${escapeHtml(summary.generatedAtIso)} (UTC)</p>
+    <div style="font-family:Arial, sans-serif; color:#102a43; background:#f4f8fb; padding:16px;">
+      <div style="max-width:1120px;margin:0 auto;">
+        <section style="background:#ffffff;border:1px solid #d6e2ec;border-radius:18px;padding:18px 20px;margin-bottom:14px;">
+          <p style="margin:0;color:#486581;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;">Compliverse</p>
+          <h2 style="margin:7px 0 5px;font-size:24px;line-height:1.2;color:#102a43;">Licence Dashboard Daily Snapshot</h2>
+          <p style="margin:0;color:#627d98;font-size:13px;">Generated at ${escapeHtml(summary.generatedAtIso)} (UTC)</p>
+        </section>
 
-      <ul>
-        <li>Total licenses: <strong>${summary.totalLicenses}</strong></li>
-        <li>Licenses with expiry date: <strong>${summary.withExpiryCount}</strong></li>
-        <li>Overdue licenses: <strong>${summary.overdueCount}</strong></li>
-        <li>Due in 15 days: <strong>${summary.dueIn15DaysCount}</strong></li>
-        <li>Due in 90 days: <strong>${summary.dueIn90DaysCount}</strong></li>
-      </ul>
+        <section style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px;">
+          <article style="background:#ffffff;border:1px solid #d6e2ec;border-radius:14px;padding:12px;">
+            <p style="margin:0;color:#627d98;font-size:12px;">Total licences</p>
+            <h3 style="margin:6px 0 0;font-size:24px;color:#102a43;">${summary.totalLicenses}</h3>
+          </article>
+          <article style="background:#ffffff;border:1px solid #d6e2ec;border-radius:14px;padding:12px;">
+            <p style="margin:0;color:#627d98;font-size:12px;">Active licences</p>
+            <h3 style="margin:6px 0 0;font-size:24px;color:#1d7a58;">${summary.activeCount}</h3>
+          </article>
+          <article style="background:#ffffff;border:1px solid #d6e2ec;border-radius:14px;padding:12px;">
+            <p style="margin:0;color:#627d98;font-size:12px;">Expired licences</p>
+            <h3 style="margin:6px 0 0;font-size:24px;color:#9f3b2d;">${summary.expiredCount}</h3>
+          </article>
+          <article style="background:#ffffff;border:1px solid #d6e2ec;border-radius:14px;padding:12px;">
+            <p style="margin:0;color:#627d98;font-size:12px;">Expiring soon</p>
+            <h3 style="margin:6px 0 0;font-size:24px;color:#925e00;">${summary.expiringSoonCount}</h3>
+          </article>
+        </section>
 
-      <h3 style="margin-top:20px;">Top urgent licenses</h3>
-      <table style="border-collapse:collapse; width:100%; max-width:900px;">
-        <thead>
-          <tr>
-            <th style="padding:8px;border:1px solid #ddd;text-align:left;background:#f3f4f6;">License</th>
-            <th style="padding:8px;border:1px solid #ddd;text-align:left;background:#f3f4f6;">Category</th>
-            <th style="padding:8px;border:1px solid #ddd;text-align:left;background:#f3f4f6;">Expiry Date</th>
-            <th style="padding:8px;border:1px solid #ddd;text-align:left;background:#f3f4f6;">Days Left</th>
-            <th style="padding:8px;border:1px solid #ddd;text-align:left;background:#f3f4f6;">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows || '<tr><td colspan="5" style="padding:8px;border:1px solid #ddd;">No expiry data found.</td></tr>'}
-        </tbody>
-      </table>
+        <section style="background:#ffffff;border:1px solid #d6e2ec;border-radius:14px;padding:12px 14px;margin-bottom:12px;">
+          <h3 style="margin:0 0 10px;font-size:16px;color:#102a43;">Status Breakdown</h3>
+          <table role="presentation" width="100%" style="border-collapse:collapse;">
+            <tr>
+              <td style="width:160px;vertical-align:top;text-align:center;padding:6px 8px 4px;">
+                ${donutHtml}
+              </td>
+              <td style="vertical-align:top;padding:4px 2px 2px 12px;">
+                <table width="100%" style="border-collapse:collapse;">
+                  <thead>
+                    <tr>
+                      <th style="text-align:left;padding:6px 8px;border-bottom:1px solid #d9dee5;color:#486581;font-size:12px;">Status</th>
+                      <th style="text-align:right;padding:6px 8px;border-bottom:1px solid #d9dee5;color:#486581;font-size:12px;">Count</th>
+                      <th style="text-align:right;padding:6px 8px;border-bottom:1px solid #d9dee5;color:#486581;font-size:12px;">Share</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${statusLegend}
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </section>
+
+        <section style="background:#ffffff;border:1px solid #d6e2ec;border-radius:14px;padding:12px;">
+          <h3 style="margin:0 0 10px;font-size:16px;color:#102a43;">Licence Register</h3>
+          <table style="border-collapse:collapse; width:100%;">
+            <thead>
+              <tr>
+                <th style="padding:8px;border:1px solid #c8d5df;text-align:left;background:#f3f7fa;">#</th>
+                <th style="padding:8px;border:1px solid #c8d5df;text-align:left;background:#f3f7fa;">License/Vendor name</th>
+                <th style="padding:8px;border:1px solid #c8d5df;text-align:left;background:#f3f7fa;">Category</th>
+                <th style="padding:8px;border:1px solid #c8d5df;text-align:left;background:#f3f7fa;">Valid till</th>
+                <th style="padding:8px;border:1px solid #c8d5df;text-align:left;background:#f3f7fa;">Remaining days</th>
+                <th style="padding:8px;border:1px solid #c8d5df;text-align:left;background:#f3f7fa;">Status</th>
+                <th style="padding:8px;border:1px solid #c8d5df;text-align:left;background:#f3f7fa;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows || '<tr><td colspan="7" style="padding:10px;border:1px solid #d9dee5;">No license records found.</td></tr>'}
+            </tbody>
+          </table>
+        </section>
+      </div>
     </div>
   `
 }
@@ -311,7 +531,7 @@ module.exports = async function (context, req) {
     const parsed = parseDashboardPayload(dashboardData)
     const summary = summarizeLicenses(parsed.licenses)
 
-    const subject = `Daily License Summary: ${summary.dueIn15DaysCount} due in 15 days`
+    const subject = `Compliverse Dashboard: ${summary.expiringSoonCount} expiring soon, ${summary.expiredCount} expired`
     const html = renderEmailHtml(summary)
     const resendResult = await sendEmailWithResend({
       apiKey: resendApiKey,
@@ -327,6 +547,9 @@ module.exports = async function (context, req) {
       resend: resendResult,
       summary: {
         totalLicenses: summary.totalLicenses,
+        activeCount: summary.activeCount,
+        expiredCount: summary.expiredCount,
+        expiringSoonCount: summary.expiringSoonCount,
         withExpiryCount: summary.withExpiryCount,
         overdueCount: summary.overdueCount,
         dueIn15DaysCount: summary.dueIn15DaysCount,
