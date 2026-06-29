@@ -50,6 +50,19 @@ function asString(value) {
   return String(value).trim()
 }
 
+function asNumberOrNull(value) {
+  if (value === null || value === undefined || value === '') {
+    return null
+  }
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value
+  }
+
+  const parsed = Number(String(value).trim())
+  return Number.isFinite(parsed) ? parsed : null
+}
+
 function pickField(row, keys) {
   for (const key of keys) {
     const value = asString(row?.[key])
@@ -88,6 +101,7 @@ function normalizeLicense(row, fallbackIndex) {
     status: pickField(row, ['status', 'Status']),
     action: pickField(row, ['action', 'Action']),
     documents: pickField(row, ['documents', 'Documents', 'Document Link', 'Document URL']),
+    remainingDays: asNumberOrNull(row?.['Remaining days']),
   }
 
   return normalized
@@ -304,13 +318,19 @@ function summarizeLicenses(licenses) {
     .map((license, index) => {
       const expiry = parseDate(license.expiryDate)
       const issue = parseDate(license.issueDate)
-      const daysLeft = expiry ? daysUntil(expiry, now) : null
-      const statusLabel = normalizeStatusLabel(license.status, daysLeft)
+      const computedDaysLeft = expiry ? daysUntil(expiry, now) : null
+      const daysLeft = license.remainingDays ?? computedDaysLeft
+      const statusLabel = normalizeStatusLabel(license.status, computedDaysLeft)
+      const remainingDaysDisplay =
+        daysLeft === null
+          ? null
+          : Math.max(0, daysLeft)
 
       return {
         ...license,
         serialNumber: index + 1,
         daysLeft,
+        remainingDaysDisplay,
         issueDateISO: issue ? issue.toISOString().slice(0, 10) : '-',
         expiryDateISO: expiry ? expiry.toISOString().slice(0, 10) : '-',
         statusLabel,
@@ -373,7 +393,7 @@ function renderEmailHtml(summary) {
   const rows = summary.registerRows
     .map((item) => {
       const statusTheme = getStatusTheme(item.statusLabel)
-      const daysLeftLabel = item.daysLeft === null ? '-' : String(item.daysLeft)
+      const daysLeftLabel = item.remainingDaysDisplay === null ? '-' : String(item.remainingDaysDisplay)
       const documentsValue = asString(item.documents)
       const documentsCell = documentsValue
         ? `<a href="${escapeHtml(documentsValue)}" style="color:#0e5f8b;text-decoration:underline;">Open document</a>`
