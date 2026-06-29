@@ -240,32 +240,58 @@ function buildStatusBreakdown(registerRows) {
   return [...known, ...custom]
 }
 
-function renderStatusDonutSvg(statusBreakdown, total) {
-  const radius = 52
-  const circumference = 2 * Math.PI * radius
-  let offset = 0
+function buildDonutChartImageUrl(statusBreakdown, total) {
+  const labels = statusBreakdown.map((item) => item.label)
+  const values = statusBreakdown.map((item) => item.count)
+  const colors = statusBreakdown.map((item) => item.color)
 
-  const segments = statusBreakdown
-    .map((item) => {
-      if (!total || item.count <= 0) {
-        return ''
-      }
+  const chartConfig = {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [
+        {
+          data: values,
+          backgroundColor: colors,
+          borderColor: '#ffffff',
+          borderWidth: 2,
+        },
+      ],
+    },
+    options: {
+      responsive: false,
+      cutout: '66%',
+      plugins: {
+        legend: {
+          display: false,
+        },
+        tooltip: {
+          enabled: false,
+        },
+      },
+    },
+  }
 
-      const length = (item.count / total) * circumference
-      const segment = `<circle cx="64" cy="64" r="${radius}" fill="none" stroke="${item.color}" stroke-width="24" stroke-dasharray="${length} ${circumference - length}" stroke-dashoffset="${-offset}" />`
-      offset += length
-      return segment
-    })
-    .join('')
+  const encodedConfig = encodeURIComponent(JSON.stringify(chartConfig))
+  const label = encodeURIComponent(`Total ${total}`)
+  return `https://quickchart.io/chart?width=220&height=220&format=png&backgroundColor=white&c=${encodedConfig}&text=${label}`
+}
+
+function renderStatusDonutImage(statusBreakdown, total) {
+  if (!total || statusBreakdown.length === 0) {
+    return '<div style="width:128px;height:128px;border-radius:50%;background:#eef3f8;border:1px solid #d9dee5;display:inline-grid;place-items:center;color:#627d98;font:600 12px Arial, sans-serif;">No data</div>'
+  }
+
+  const donutImageUrl = buildDonutChartImageUrl(statusBreakdown, total)
 
   return `
-    <svg width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="Status breakdown">
-      <circle cx="64" cy="64" r="${radius}" fill="none" stroke="#d9dee5" stroke-width="24" />
-      <g transform="rotate(-90 64 64)">${segments}</g>
-      <circle cx="64" cy="64" r="29" fill="#ffffff" stroke="#d9dee5" />
-      <text x="64" y="61" text-anchor="middle" style="font:700 19px Arial, sans-serif; fill:#102a43;">${total}</text>
-      <text x="64" y="78" text-anchor="middle" style="font:600 10px Arial, sans-serif; fill:#486581;">Total</text>
-    </svg>
+    <img
+      src="${escapeHtml(donutImageUrl)}"
+      width="128"
+      height="128"
+      alt="Status breakdown donut chart"
+      style="display:block;width:128px;height:128px;border:0;outline:none;text-decoration:none;"
+    />
   `
 }
 
@@ -327,7 +353,7 @@ function escapeHtml(value) {
 }
 
 function renderEmailHtml(summary) {
-  const donutHtml = renderStatusDonutSvg(summary.statusBreakdown, summary.totalLicenses)
+  const donutHtml = renderStatusDonutImage(summary.statusBreakdown, summary.totalLicenses)
 
   const statusLegend = summary.statusBreakdown
     .map(
